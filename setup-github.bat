@@ -1,45 +1,43 @@
 @echo off
-echo 🐙 Setting up GitHub Repository for NIL Matchup...
+echo 🚀 Setting up GitHub connection for NIL App...
 echo.
 
-echo 📁 Initializing Git repository...
-git init
-
-echo.
-echo 📝 Adding all files to Git...
-git add .
-
-echo.
-echo 💾 Creating initial commit...
-git commit -m "Initial commit: NIL Matchup app"
-
-echo.
-echo 🔗 Setting up GitHub remote...
-echo.
-echo 📋 Instructions:
-echo 1. Go to https://github.com/new
-echo 2. Repository name: nil-matchup
-echo 3. Make it Public
-echo 4. Don't initialize with README (we already have files)
-echo 5. Click "Create repository"
-echo 6. Copy the repository URL (https://github.com/YOUR_USERNAME/nil-matchup.git)
-echo 7. Come back here and press any key
+echo 📝 Please follow these steps:
+echo 1. Go to GitHub.com and create a new repository named "nil-matchup-app"
+echo 2. Make it PRIVATE (recommended for business apps)
+echo    - This protects your source code from competitors
+echo    - Your website will still be public and accessible to users
+echo    - Only you and collaborators can see the code
+echo 3. Don't initialize with README
+echo 4. Copy the repository URL
 echo.
 
-pause
+echo 💡 Why Private Repository?
+echo - Protects your business model and unique features
+echo - Keeps API keys and business logic secure
+echo - Your website remains public and accessible to all users
+echo - Professional approach for business applications
+echo.
+
+set /p GITHUB_URL="Enter your GitHub repository URL (e.g., https://github.com/username/nil-matchup-app.git): "
 
 echo.
-echo 🔗 Adding remote origin...
-git remote add origin https://github.com/jadenselby01/nil-matchup.git
-
-echo.
-echo 🚀 Pushing to GitHub...
+echo 🔗 Connecting to GitHub...
+git remote add origin %GITHUB_URL%
 git branch -M main
 git push -u origin main
 
 echo.
 echo ✅ GitHub setup complete!
-echo 🌐 Your repository: https://github.com/jadenselby01/nil-matchup
 echo.
-
+echo 🌐 Your website will be public and accessible to all users
+echo 🔒 Your source code is protected and private
+echo.
+echo 📋 Next steps:
+echo 1. Set up Supabase database
+echo 2. Configure Stripe payments
+echo 3. Deploy to Vercel
+echo 4. Set up custom domain
+echo.
+echo 📖 See DEPLOYMENT_STEPS.md for detailed instructions
 pause 
