@@ -1,0 +1,435 @@
+.proposals-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.proposals-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.proposals-title {
+  font-size: 2.5rem;
+  color: #ffffff;
+  margin-bottom: 8px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.proposals-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.proposals-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.create-proposal-btn {
+  padding: 16px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  min-width: 200px;
+}
+
+.create-proposal-btn.primary-btn {
+  background: linear-gradient(135deg, #64ffda 0%, #00d4aa 100%);
+  color: #0a1929;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3);
+}
+
+.create-proposal-btn.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(100, 255, 218, 0.4);
+}
+
+.create-proposal-btn.secondary-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.create-proposal-btn.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.proposals-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  position: relative;
+}
+
+.tab-btn.active {
+  background: rgba(100, 255, 218, 0.2);
+  color: #64ffda;
+  box-shadow: 0 2px 8px rgba(100, 255, 218, 0.2);
+}
+
+.tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #64ffda;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: #ffffff;
+  margin-bottom: 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+  max-width: 400px;
+}
+
+.proposals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 32px;
+  margin-top: 40px;
+}
+
+.proposal-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.proposal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.5), transparent);
+}
+
+.proposal-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  border-color: rgba(100, 255, 218, 0.3);
+}
+
+.proposal-header {
+  margin-bottom: 24px;
+}
+
+.proposal-parties {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.party-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.party-info img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(100, 255, 218, 0.3);
+  flex-shrink: 0;
+}
+
+.party-info h4 {
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.party-type {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.proposal-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #0a1929;
+}
+
+.proposal-content {
+  margin-bottom: 24px;
+}
+
+.proposal-title {
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.proposal-description {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.proposal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.deliverables-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deliverable-tag {
+  background: rgba(100, 255, 218, 0.2);
+  color: #64ffda;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+}
+
+.compensation-amount {
+  color: #64ffda;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.deadline-date,
+.created-date {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.accept-btn {
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.accept-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.archive-btn {
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.archive-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+.accepted-badge,
+.archived-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.accepted-badge {
+  background: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.archived-badge {
+  background: rgba(108, 117, 125, 0.2);
+  color: #6c757d;
+  border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .proposals-content {
+    margin: 20px;
+  }
+  
+  .proposals-title {
+    font-size: 2rem;
+  }
+  
+  .proposals-tabs {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .tab-btn {
+    text-align: center;
+  }
+  
+  .proposals-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .proposal-card {
+    padding: 24px 20px;
+  }
+  
+  .proposal-parties {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .proposal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .accept-btn,
+  .archive-btn {
+    width: 100%;
+  }
+} 
