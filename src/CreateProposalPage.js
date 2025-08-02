@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './CreateProposalPage.css';
 
-function CreateProposalPage({ currentUser, userType, onBack }) {
+function CreateProposalPage({ currentUser, userType, onBack, onProposalSent }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -119,8 +119,20 @@ function CreateProposalPage({ currentUser, userType, onBack }) {
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      alert('✅ Proposal sent successfully! The recipient will be notified.');
-      onBack();
+      
+      // Call the callback with proposal data if provided
+      if (onProposalSent) {
+        const selectedTarget = availableTargets.find(target => target.id === parseInt(formData.targetId));
+        onProposalSent({
+          targetName: selectedTarget?.name || 'the recipient',
+          title: formData.title,
+          compensation: calculateTotalCompensation()
+        });
+      } else {
+        // Fallback to alert if no callback provided
+        alert('✅ Proposal sent successfully! The recipient will be notified.');
+        onBack();
+      }
     }, 2000);
   };
 

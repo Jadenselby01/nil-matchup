@@ -1,38 +1,320 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import Footer from './components/Footer';
+import AuthService from './services/authService';
 import { SecurityProvider } from './contexts/SecurityContext';
-import PlayerModal from './PlayerModal';
-import BusinessModal from './BusinessModal';
-import CreateOfferPage from './CreateOfferPage';
-import OffersPage from './OffersPage';
-
-
+import Notification from './components/Notification';
+import DealsDropdown from './components/DealsDropdown';
+import CommunicationDropdown from './components/CommunicationDropdown';
 import MessagingPage from './MessagingPage';
 import PaymentPage from './PaymentPage';
-
-import DealsPage from './DealsPage';
 import PaymentProcessingPage from './PaymentProcessingPage';
-// import AthleteProfilePage from './AthleteProfilePage';
-// import BusinessProfilePage from './BusinessProfilePage';
 import DocumentSigningPage from './components/DocumentSigningPage';
-import DropdownMenu from './components/DropdownMenu';
-import LegalDocumentsModal from './components/LegalDocumentsModal';
-import PoliciesModal from './components/PoliciesModal';
-import SettingsModal from './components/SettingsModal';
+import CreateProposalPage from './CreateProposalPage';
+import DealsPage from './DealsPage';
+import Footer from './components/Footer';
 
-import SmartDealTemplates from './components/SmartDealTemplates';
-import AutoAdProofTool from './components/AutoAdProofTool';
-import MicroCoachingCarousel from './components/MicroCoachingCarousel';
-import authService from './services/authService';
+// DropdownMenu Component
+const DropdownMenu = ({ onViewDocuments, onViewPolicies, onViewSettings }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="dropdown-menu">
+      <button 
+        className="dropdown-toggle"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        ⚙️ Settings
+      </button>
+      {isOpen && (
+        <div className="dropdown-content">
+          <button onClick={onViewDocuments}>📄 Legal Documents</button>
+          <button onClick={onViewPolicies}>📋 Policies</button>
+          <button onClick={onViewSettings}>⚙️ Settings</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// PlayerModal Component
+const PlayerModal = ({ player, onClose }) => {
+  if (!player) return null;
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <img src={player.image} alt={player.name} />
+        <h2>{player.name}</h2>
+        <p><strong>Sport:</strong> {player.sport}</p>
+        <p><strong>University:</strong> {player.university}</p>
+        <p><strong>Age:</strong> {player.age} years old</p>
+        <p><strong>Bio:</strong> {player.bio}</p>
+      </div>
+    </div>
+  );
+};
+
+// BusinessModal Component
+const BusinessModal = ({ business, onClose }) => {
+  if (!business) return null;
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <img src={business.image} alt={business.name} />
+        <h2>{business.name}</h2>
+        <p><strong>Type:</strong> {business.type}</p>
+        <p><strong>Location:</strong> {business.location}</p>
+        <p><strong>Partnership Type:</strong> {business.partnershipType}</p>
+        <p><strong>Budget Range:</strong> {business.budgetRange}</p>
+        <p><strong>Description:</strong> {business.description}</p>
+      </div>
+    </div>
+  );
+};
+
+// LegalDocumentsModal Component
+const LegalDocumentsModal = ({ onClose }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <button className="modal-close" onClick={onClose}>×</button>
+      <h2>Legal Documents</h2>
+      <p>Legal documents content would go here.</p>
+    </div>
+  </div>
+);
+
+// PoliciesModal Component
+const PoliciesModal = ({ onClose }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <button className="modal-close" onClick={onClose}>×</button>
+      <h2>Policies</h2>
+      <p>Policies content would go here.</p>
+    </div>
+  </div>
+);
+
+// SettingsModal Component
+const SettingsModal = ({ onClose }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <button className="modal-close" onClick={onClose}>×</button>
+      <h2>Settings</h2>
+      <p>Settings content would go here.</p>
+    </div>
+  </div>
+);
+
+// SmartDealTemplates Component
+const SmartDealTemplates = ({ onClose, onTemplateCreated }) => {
+  const [templateData, setTemplateData] = useState({
+    title: '',
+    description: '',
+    category: 'social_media',
+    budget: '',
+    duration: '',
+    requirements: '',
+    targetAudience: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (field, value) => {
+    setTemplateData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      if (onTemplateCreated) {
+        onTemplateCreated(templateData);
+      }
+      onClose();
+    }, 2000);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content smart-template-modal" onClick={e => e.stopPropagation()} style={{ color: '#333' }}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <h2 style={{ color: '#333' }}>Create Smart Deal Template</h2>
+        <p className="modal-subtitle" style={{ color: '#666' }}>Create a template that athletes can use to propose deals to your business</p>
+        
+        <form onSubmit={handleSubmit} className="smart-template-form" style={{ color: '#333' }}>
+          <div className="form-group">
+            <label htmlFor="title" style={{ color: '#333' }}>Template Title *</label>
+            <input
+              type="text"
+              id="title"
+              value={templateData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              placeholder="e.g., Social Media Promotion Campaign"
+              required
+              style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description" style={{ color: '#333' }}>Description *</label>
+            <textarea
+              id="description"
+              value={templateData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Describe what you're looking for from athletes..."
+              rows="3"
+              required
+              style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="category" style={{ color: '#333' }}>Category *</label>
+              <select
+                id="category"
+                value={templateData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
+                required
+                style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+              >
+                <option value="social_media">Social Media</option>
+                <option value="content_creation">Content Creation</option>
+                <option value="product_review">Product Review</option>
+                <option value="event_promotion">Event Promotion</option>
+                <option value="brand_campaign">Brand Campaign</option>
+                <option value="ambassador">Brand Ambassador</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="budget" style={{ color: '#333' }}>Budget Range *</label>
+              <input
+                type="text"
+                id="budget"
+                value={templateData.budget}
+                onChange={(e) => handleInputChange('budget', e.target.value)}
+                placeholder="e.g., $500-$2000"
+                required
+                style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="duration" style={{ color: '#333' }}>Duration *</label>
+              <input
+                type="text"
+                id="duration"
+                value={templateData.duration}
+                onChange={(e) => handleInputChange('duration', e.target.value)}
+                placeholder="e.g., 2 weeks, 1 month"
+                required
+                style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="targetAudience" style={{ color: '#333' }}>Target Audience</label>
+              <input
+                type="text"
+                id="targetAudience"
+                value={templateData.targetAudience}
+                onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+                placeholder="e.g., College students, Sports fans"
+                style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="requirements" style={{ color: '#333' }}>Specific Requirements</label>
+            <textarea
+              id="requirements"
+              value={templateData.requirements}
+              onChange={(e) => handleInputChange('requirements', e.target.value)}
+              placeholder="List any specific requirements, deliverables, or guidelines..."
+              rows="3"
+              style={{ color: '#333', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '8px' }}
+            />
+          </div>
+
+          <div className="form-actions">
+            <button type="button" className="btn-secondary" onClick={onClose} style={{ color: '#333' }}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating Template...' : 'Create Template'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// AutoAdProofTool Component
+const AutoAdProofTool = ({ onClose }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <button className="modal-close" onClick={onClose}>×</button>
+      <h2>Auto Ad Proof Tool</h2>
+      <p>Auto ad proof tool content would go here.</p>
+    </div>
+  </div>
+);
+
+// MicroCoachingCarousel Component
+const MicroCoachingCarousel = ({ onClose }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <button className="modal-close" onClick={onClose}>×</button>
+      <h2>Micro Coaching</h2>
+      <p>Micro coaching content would go here.</p>
+    </div>
+  </div>
+);
+
+// CreateOfferPage Component
+const CreateOfferPage = ({ onBack }) => (
+  <div className="page-container">
+    <header className="page-header">
+      <button className="back-btn" onClick={onBack}>← Back</button>
+      <h1>Create Offer</h1>
+    </header>
+    <main className="page-content">
+      <p>Create offer functionality would go here.</p>
+    </main>
+  </div>
+);
+
+// OffersPage Component
+const OffersPage = ({ onBack }) => (
+  <div className="page-container">
+    <header className="page-header">
+      <button className="back-btn" onClick={onBack}>← Back</button>
+      <h1>Offers</h1>
+    </header>
+    <main className="page-content">
+      <p>Offers list would go here.</p>
+    </main>
+  </div>
+);
 
 function App() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'players', 'athlete-login', 'athlete-signup', 'business-login', 'business-signup', 'athlete-profile', 'business-profile', 'athlete-dashboard', 'business-dashboard', 'create-offer', 'offers', 'messaging', 'payment', 'payment-history'
   const [userType, setUserType] = useState(''); // 'athlete' or 'business'
-  const [athleteProfileImage, setAthleteProfileImage] = useState(null);
-  const [businessProfileImage, setBusinessProfileImage] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); // For messaging system
   // const [paymentData, setPaymentData] = useState(null); // For payment processing
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -48,6 +330,9 @@ function App() {
   const [showMicroCoaching, setShowMicroCoaching] = useState(false);
   const [currentDeal, setCurrentDeal] = useState(null);
   const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
+
+  // Notification state
+  const [notification, setNotification] = useState(null);
 
   // Clean up corrupted localStorage data on app start
   useEffect(() => {
@@ -320,6 +605,24 @@ function App() {
     setCurrentPage('payment-processing');
   };
 
+  const handleTemplateCreated = (templateData) => {
+    showNotification(
+      `✅ Smart template "${templateData.title}" created successfully! Athletes can now see and propose deals based on this template.`,
+      'success',
+      5000
+    );
+  };
+
+  // Show notification function
+  const showNotification = (message, type = 'success', duration = 5000) => {
+    setNotification({ message, type, duration });
+  };
+
+  // Clear notification function
+  const clearNotification = () => {
+    setNotification(null);
+  };
+
 
   // Landing page component
   const LandingPage = () => (
@@ -328,7 +631,7 @@ function App() {
         <h1 className="landing-title">NIL Matchup</h1>
         <p className="landing-subtitle">NIL for all</p>
         <p className="landing-description">
-          Connecting college athletes with local businesses to create meaningful partnerships and opportunities for everyone in the community.
+          Connecting college athletes with local businesses for meaningful partnerships.
         </p>
         
         <div className="landing-buttons">
@@ -368,7 +671,7 @@ function App() {
       setError('');
 
       try {
-        const { data, error } = await authService.signIn(email, password, type);
+        const { data, error } = await AuthService.signIn(email, password, type);
         
         if (error) {
           setError(error.message);
@@ -892,7 +1195,7 @@ function App() {
   // Athlete Dashboard - View Businesses
   const AthleteDashboard = () => {
     const handleLogout = async () => {
-      await authService.signOut();
+      await AuthService.signOut();
       setCurrentUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem('currentUser');
@@ -929,18 +1232,14 @@ function App() {
           >
             NIL Opportunities
           </button>
-          <button 
-            className="action-btn primary-btn"
-            onClick={() => setCurrentPage('messaging')}
-          >
-            Messages
-          </button>
-          <button 
-            className="action-btn primary-btn"
-            onClick={() => setCurrentPage('deals')}
-          >
-            Deals & Payments
-          </button>
+          <DealsDropdown
+            onViewDeals={() => setCurrentPage('deals')}
+          />
+          <CommunicationDropdown
+            onMessages={() => setCurrentPage('messaging')}
+            onDeals={() => setCurrentPage('deals')}
+            onPayments={() => setCurrentPage('payment')}
+          />
         </div>
       </header>
 
@@ -970,7 +1269,7 @@ function App() {
   // Business Dashboard - View Athletes
   const BusinessDashboard = () => {
     const handleLogout = async () => {
-      await authService.signOut();
+      await AuthService.signOut();
       setCurrentUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem('currentUser');
@@ -985,11 +1284,12 @@ function App() {
         <header className="App-header">
           <div className="header-top">
             <div className="dashboard-actions">
-              <DropdownMenu
-                onViewDocuments={() => setShowLegalDocuments(true)}
-                onViewPolicies={() => setShowPolicies(true)}
-                onViewSettings={() => setShowSettings(true)}
-              />
+              <button 
+                className="settings-btn"
+                onClick={() => setShowSettings(true)}
+              >
+                Settings
+              </button>
               <button 
                 className="logout-btn"
                 onClick={handleLogout}
@@ -1000,48 +1300,72 @@ function App() {
           </div>
           <h1>{currentUser?.name || 'Business'}'s Dashboard</h1>
           <p>Welcome back, {currentUser?.name || 'Business'}!</p>
-        <div className="dashboard-actions centered">
-          <button 
-            className="action-btn primary-btn"
-            onClick={() => setShowSmartDealTemplates(true)}
-          >
-            Smart Templates
-          </button>
-          <button 
-            className="action-btn primary-btn"
-            onClick={() => setCurrentPage('messaging')}
-          >
-            Messages
-          </button>
-          <button 
-            className="action-btn primary-btn"
-            onClick={() => setCurrentPage('deals')}
-          >
-            Deals & Payments
-          </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="explore-grid">
-        {athletes.map(athlete => (
-          <div
-            key={athlete.id}
-            className="athlete-card"
-            onClick={() => setSelectedPlayer(athlete)}
-          >
-            <img src={athlete.image} alt={athlete.name} />
-            <h3>{athlete.name}</h3>
-            <p className="athlete-sport">{athlete.sport}</p>
-            <p className="athlete-university">{athlete.university}</p>
-            <p className="athlete-bio">{athlete.bio}</p>
-            <div className="athlete-tags">
-              <span className="tag age">{athlete.age} years old</span>
-              <span className="tag sport">{athlete.sport}</span>
-            </div>
+        <main className="dashboard-main">
+          <div className="dashboard-buttons">
+            <button 
+              className="action-btn primary-btn"
+              onClick={() => setCurrentPage('explore')}
+            >
+              NIL Opportunities
+            </button>
+            <button 
+              className="action-btn primary-btn"
+              onClick={() => setCurrentPage('deals')}
+            >
+              Deals
+            </button>
+            <button 
+              className="action-btn primary-btn"
+              onClick={() => setCurrentPage('messaging')}
+            >
+              Messages
+            </button>
+            <button 
+              className="action-btn primary-btn"
+              onClick={() => setCurrentPage('payment')}
+            >
+              Payment
+            </button>
+            <button 
+              className="action-btn primary-btn"
+              onClick={() => setShowSmartDealTemplates(true)}
+            >
+              Smart Templates
+            </button>
           </div>
-        ))}
-      </main>
-    </>
+
+          <div className="athletes-preview">
+            <h2>Available Athletes</h2>
+            <div className="explore-grid">
+              {athletes.slice(0, 3).map(athlete => (
+                <div
+                  key={athlete.id}
+                  className="athlete-card"
+                  onClick={() => setSelectedPlayer(athlete)}
+                >
+                  <img src={athlete.image} alt={athlete.name} />
+                  <h3>{athlete.name}</h3>
+                  <p className="athlete-sport">{athlete.sport}</p>
+                  <p className="athlete-university">{athlete.university}</p>
+                  <p className="athlete-bio">{athlete.bio}</p>
+                  <div className="athlete-tags">
+                    <span className="tag age">{athlete.age} years old</span>
+                    <span className="tag sport">{athlete.sport}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button 
+              className="action-btn secondary-btn"
+              onClick={() => setCurrentPage('explore')}
+            >
+              View All Athletes
+            </button>
+          </div>
+        </main>
+      </>
     );
   };
 
@@ -1066,7 +1390,7 @@ function App() {
               <button 
                 className="logout-btn"
                 onClick={async () => {
-                  await authService.signOut();
+                  await AuthService.signOut();
                   setCurrentUser(null);
                   setIsAuthenticated(false);
                   localStorage.removeItem('currentUser');
@@ -1186,6 +1510,27 @@ function App() {
       case 'offers':
         return <OffersPage onBack={() => setCurrentPage('athlete-dashboard')} />;
 
+      case 'deals':
+        return <DealsPage 
+          currentUser={currentUser}
+          onBack={() => setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
+        />;
+
+      case 'create-proposal':
+        return <CreateProposalPage 
+          currentUser={currentUser}
+          userType={userType}
+          onBack={() => setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
+          onProposalSent={(proposalData) => {
+            showNotification(
+              `🎉 Proposal sent successfully to ${proposalData.targetName}! They will be notified and can review your offer.`,
+              'success',
+              5000
+            );
+            setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+          }}
+        />;
+
       case 'messaging':
         return <MessagingPage 
           currentUser={currentUser} 
@@ -1201,13 +1546,6 @@ function App() {
           }}
         />;
 
-      case 'deals':
-        return <DealsPage 
-          currentUser={currentUser}
-          userType={userType}
-          onBack={() => setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
-          onProcessPayment={handleProcessPayment}
-        />;
       case 'payment-processing':
         return <PaymentProcessingPage 
           dealId={currentDeal?.id}
@@ -1280,9 +1618,8 @@ function App() {
 
         {showSmartDealTemplates && (
           <SmartDealTemplates
-            userType={userType}
-            onDealCreate={handleDealCreate}
             onClose={() => setShowSmartDealTemplates(false)}
+            onTemplateCreated={handleTemplateCreated}
           />
         )}
 
@@ -1298,6 +1635,16 @@ function App() {
           <MicroCoachingCarousel
             onComplete={handleMicroCoachingComplete}
             onClose={() => setShowMicroCoaching(false)}
+          />
+        )}
+
+        {/* Notification */}
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            duration={notification.duration}
+            onClose={clearNotification}
           />
         )}
 

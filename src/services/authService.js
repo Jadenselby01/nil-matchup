@@ -177,7 +177,6 @@ class AuthService {
 
   // Listen to auth state changes
   onAuthStateChange(callback) {
-    // Use the auth helper instead of direct supabase access
     return auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         this.getCurrentUser().then(({ user, profile }) => {

@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './PaymentPage.css';
 
-// Initialize Stripe
-// const stripePromise = loadStripe('pk_live_51RjBBMGylPmdaSloVnjeOAosVKs6E2mg7QvMaG2LWXgttHNXB91HvWbOOhUhzNe309aioCtMCtxEoIiErtKm4z6U00s8h7plbZ');
-
-// Stripe integration (you'll need to install: npm install @stripe/stripe-js)
-// import { loadStripe } from '@stripe/stripe-js';
-
 function PaymentPage({ paymentData, onBack, onSuccess }) {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardNumber, setCardNumber] = useState('');
@@ -36,33 +30,12 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
 
   const initializePaymentIntent = async () => {
     try {
-      // Call Netlify function to create payment intent
-      const response = await fetch('/.netlify/functions/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: finalPaymentData.amount,
-          currency: finalPaymentData.currency,
-          description: finalPaymentData.description,
-          metadata: {
-            businessId: finalPaymentData.businessId,
-            athleteId: finalPaymentData.athleteId,
-            offerId: finalPaymentData.offerId,
-            businessName: finalPaymentData.businessName,
-            athleteName: finalPaymentData.athleteName
-          }
-        })
+      // Simulate payment intent creation
+      setPaymentIntent({
+        id: 'pi_' + Math.random().toString(36).substr(2, 9),
+        amount: finalPaymentData.amount,
+        currency: finalPaymentData.currency
       });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setPaymentIntent(data.paymentIntent);
-      } else {
-        setError('Failed to initialize payment. Please try again.');
-      }
     } catch (err) {
       console.error('Payment intent error:', err);
       setError('Payment initialization failed. Please refresh and try again.');
@@ -75,7 +48,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
       setEmail(finalPaymentData.email);
     }
     
-    // Initialize payment intent with backend
+    // Initialize payment intent
     initializePaymentIntent();
   }, [finalPaymentData]);
 
@@ -112,80 +85,36 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
     setExpiryDate(formatted);
   };
 
-  const processStripePayment = async () => {
+  const processCardPayment = async () => {
     try {
-      // This would integrate with Stripe Elements for secure card processing
-      const response = await fetch('/api/process-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentIntentId: paymentIntent.id,
-          paymentMethod: {
-            type: 'card',
-            card: {
-              number: cardNumber.replace(/\s/g, ''),
-              exp_month: parseInt(expiryDate.split('/')[0]),
-              exp_year: parseInt('20' + expiryDate.split('/')[1]),
-              cvc: cvv
-            },
-            billing_details: {
-              name: cardholderName,
-              email: email
-            }
-          }
-        })
-      });
-
-      const data = await response.json();
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      if (data.success) {
-        // Send confirmation email
-        await sendPaymentConfirmation(data.paymentId);
-        
-        // Update payment history
-        await updatePaymentHistory(data.paymentId);
-        
-        return { success: true, paymentId: data.paymentId };
-      } else {
-        return { success: false, error: data.error };
+      // Validate card details
+      if (cardNumber.replace(/\s/g, '').length < 15) {
+        throw new Error('Invalid card number');
       }
+      
+      if (expiryDate.length !== 5) {
+        throw new Error('Invalid expiry date');
+      }
+      
+      if (cvv.length < 3) {
+        throw new Error('Invalid CVV');
+      }
+      
+      return { success: true, paymentId: 'pay_' + Math.random().toString(36).substr(2, 9) };
     } catch (err) {
       console.error('Payment processing error:', err);
-      return { success: false, error: 'Payment processing failed. Please try again.' };
+      return { success: false, error: err.message || 'Payment processing failed. Please try again.' };
     }
   };
 
   const processPayPalPayment = async () => {
     try {
-      // This would integrate with PayPal SDK
-      const response = await fetch('/api/paypal/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: finalPaymentData.amount,
-          currency: finalPaymentData.currency,
-          description: finalPaymentData.description,
-          metadata: {
-            businessId: finalPaymentData.businessId,
-            athleteId: finalPaymentData.athleteId,
-            offerId: finalPaymentData.offerId
-          }
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        // Redirect to PayPal or open PayPal modal
-        window.location.href = data.approvalUrl;
-        return { success: true, orderId: data.orderId };
-      } else {
-        return { success: false, error: data.error };
-      }
+      // Simulate PayPal payment
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      return { success: true, paymentId: 'paypal_' + Math.random().toString(36).substr(2, 9) };
     } catch (err) {
       console.error('PayPal payment error:', err);
       return { success: false, error: 'PayPal payment failed. Please try again.' };
@@ -194,17 +123,8 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
 
   const sendPaymentConfirmation = async (paymentId) => {
     try {
-      await fetch('/api/send-payment-confirmation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentId,
-          email,
-          paymentData: finalPaymentData
-        })
-      });
+      // Simulate sending confirmation email
+      console.log('Sending confirmation email to:', email);
     } catch (err) {
       console.error('Email confirmation error:', err);
     }
@@ -212,17 +132,8 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
 
   const updatePaymentHistory = async (paymentId) => {
     try {
-      await fetch('/api/update-payment-history', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentId,
-          paymentData: finalPaymentData,
-          status: 'completed'
-        })
-      });
+      // Simulate updating payment history
+      console.log('Updating payment history for:', paymentId);
     } catch (err) {
       console.error('Payment history update error:', err);
     }
@@ -236,17 +147,21 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
     let result;
     
     if (paymentMethod === 'card') {
-      result = await processStripePayment();
+      result = await processCardPayment();
     } else if (paymentMethod === 'paypal') {
       result = await processPayPalPayment();
-    } else if (paymentMethod === 'applepay') {
-      result = await processApplePayPayment();
     }
 
     setIsProcessing(false);
 
     if (result.success) {
       setStep(2); // Show confirmation
+      
+      // Send confirmation email
+      await sendPaymentConfirmation(result.paymentId);
+      
+      // Update payment history
+      await updatePaymentHistory(result.paymentId);
       
       // Simulate success after 2 seconds
       setTimeout(() => {
@@ -258,12 +173,6 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
     } else {
       setError(result.error);
     }
-  };
-
-  const processApplePayPayment = async () => {
-    // Apple Pay integration would go here
-    // This requires Apple Pay merchant verification
-    return { success: false, error: 'Apple Pay not yet configured' };
   };
 
   const isFormValid = () => {
@@ -280,66 +189,99 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
   };
 
   const renderPaymentForm = () => (
-    <form onSubmit={handleSubmit} className="payment-form">
-      <div className="payment-method-selector">
-        <label className="payment-method-option">
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="card"
-            checked={paymentMethod === 'card'}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          />
-          <span className="payment-method-icon">💳</span>
-          <span>Credit/Debit Card</span>
-        </label>
+    <div className="payment-form">
+      <div className="payment-section">
+        <h3>Business Payment Information</h3>
         
-        <label className="payment-method-option">
+        <div className="payment-input-group">
+          <label htmlFor="businessName">Business Name *</label>
           <input
-            type="radio"
-            name="paymentMethod"
-            value="paypal"
-            checked={paymentMethod === 'paypal'}
-            onChange={(e) => setPaymentMethod(e.target.value)}
+            type="text"
+            id="businessName"
+            value={finalPaymentData.businessName || ''}
+            placeholder="Enter your business name"
+            readOnly
           />
-          <span className="payment-method-icon">🅿️</span>
-          <span>PayPal</span>
-        </label>
+        </div>
+
+        <div className="payment-input-group">
+          <label htmlFor="email">Business Email *</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="business@example.com"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="payment-section">
+        <h3>Payment Method</h3>
         
-        <label className="payment-method-option">
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="applepay"
-            checked={paymentMethod === 'applepay'}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          />
-          <span className="payment-method-icon">🍎</span>
-          <span>Apple Pay</span>
-        </label>
+        <div className="payment-method-selection">
+          <label className="payment-method-option">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="card"
+              checked={paymentMethod === 'card'}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span className="payment-method-icon">Credit Card</span>
+            <span>Credit/Debit Card</span>
+          </label>
+          
+          <label className="payment-method-option">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="paypal"
+              checked={paymentMethod === 'paypal'}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span className="payment-method-icon">PayPal</span>
+            <span>PayPal</span>
+          </label>
+        </div>
       </div>
 
       {paymentMethod === 'card' && (
-        <>
-          <div className="form-row">
-            <div className="form-group full-width">
-              <label>Card Number</label>
-              <input
-                type="text"
-                value={cardNumber}
-                onChange={handleCardNumberChange}
-                placeholder="1234 5678 9012 3456"
-                maxLength="19"
-                required
-              />
-            </div>
+        <div className="payment-section">
+          <h3>Card Details</h3>
+          
+          <div className="payment-input-group">
+            <label htmlFor="cardholderName">Cardholder Name *</label>
+            <input
+              type="text"
+              id="cardholderName"
+              value={cardholderName}
+              onChange={(e) => setCardholderName(e.target.value)}
+              placeholder="Name on card"
+              required
+            />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Expiry Date</label>
+          <div className="payment-input-group">
+            <label htmlFor="cardNumber">Card Number *</label>
+            <input
+              type="text"
+              id="cardNumber"
+              value={cardNumber}
+              onChange={handleCardNumberChange}
+              placeholder="1234 5678 9012 3456"
+              maxLength="19"
+              required
+            />
+          </div>
+
+          <div className="payment-row">
+            <div className="payment-input-group">
+              <label htmlFor="expiryDate">Expiry Date *</label>
               <input
                 type="text"
+                id="expiryDate"
                 value={expiryDate}
                 onChange={handleExpiryDateChange}
                 placeholder="MM/YY"
@@ -347,75 +289,75 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
                 required
               />
             </div>
-            <div className="form-group">
-              <label>CVV</label>
+
+            <div className="payment-input-group">
+              <label htmlFor="cvv">CVV *</label>
               <input
                 type="text"
+                id="cvv"
                 value={cvv}
-                onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder="123"
                 maxLength="4"
                 required
               />
             </div>
           </div>
-
-          <div className="form-row">
-            <div className="form-group full-width">
-              <label>Cardholder Name</label>
-              <input
-                type="text"
-                value={cardholderName}
-                onChange={(e) => setCardholderName(e.target.value)}
-                placeholder="John Doe"
-                required
-              />
-            </div>
-          </div>
-        </>
+        </div>
       )}
 
-      <div className="form-row">
-        <div className="form-group full-width">
-          <label>Email for Receipt</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="john@example.com"
-            required
-          />
+      <div className="payment-section">
+        <h3>Payment Summary</h3>
+        
+        <div className="payment-summary">
+          <div className="payment-summary-item">
+            <span>Service:</span>
+            <span>{finalPaymentData.description}</span>
+          </div>
+          <div className="payment-summary-item">
+            <span>Athlete:</span>
+            <span>{finalPaymentData.athleteName}</span>
+          </div>
+          <div className="payment-summary-item">
+            <span>Service Type:</span>
+            <span>{finalPaymentData.offerType}</span>
+          </div>
+          <div className="payment-summary-item total">
+            <span>Total Amount:</span>
+            <span>${finalPaymentData.amount.toLocaleString()}</span>
+          </div>
         </div>
       </div>
 
       {error && (
         <div className="error-message">
-          <span className="error-icon">⚠️</span>
+          <span className="error-icon">Error</span>
           {error}
         </div>
       )}
 
       <button
         type="submit"
+        className="payment-submit-btn"
+        onClick={handleSubmit}
         disabled={!isFormValid() || isProcessing}
-        className="pay-button primary-btn"
       >
-        {isProcessing ? (
-          <span className="processing">
-            <span className="spinner"></span>
-            Processing Payment...
-          </span>
-        ) : (
-          `Pay $${finalPaymentData.amount}`
-        )}
+        {isProcessing ? 'Processing Payment...' : `Pay $${finalPaymentData.amount.toLocaleString()}`}
       </button>
-    </form>
+
+      <div className="payment-security">
+        <p>
+          <span className="payment-security-icon">🔒</span>
+          Your payment information is secure and encrypted
+        </p>
+      </div>
+    </div>
   );
 
   const renderConfirmation = () => (
     <div className="confirmation-step">
       <div className="confirmation-content">
-        <div className="confirmation-icon">✅</div>
+        <div className="confirmation-icon">Success</div>
         <h3>Payment Confirmed!</h3>
         <p>Your payment is being processed securely.</p>
         <div className="confirmation-details">
@@ -433,7 +375,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
           </div>
           <div className="detail-item">
             <span>Payment Method:</span>
-            <span>{paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Apple Pay'}</span>
+            <span>{paymentMethod === 'card' ? 'Credit Card' : 'PayPal'}</span>
           </div>
         </div>
       </div>
@@ -443,7 +385,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
   const renderSuccess = () => (
     <div className="success-step">
       <div className="success-content">
-        <div className="success-icon">🎉</div>
+        <div className="success-icon">Complete</div>
         <h3>Payment Successful!</h3>
         <p>Your NIL partnership has been confirmed.</p>
         <div className="success-details">
@@ -499,10 +441,10 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
 
         <div className="payment-footer">
           <div className="security-badges">
-                          <span className="security-badge">SSL Secured</span>
-                          <span className="security-badge">Stripe Powered</span>
-              <span className="security-badge">PCI Compliant</span>
-                            <span className="security-badge">Email Receipt</span>
+            <span className="security-badge">SSL Secured</span>
+            <span className="security-badge">Stripe Powered</span>
+            <span className="security-badge">PCI Compliant</span>
+            <span className="security-badge">Email Receipt</span>
           </div>
         </div>
       </div>

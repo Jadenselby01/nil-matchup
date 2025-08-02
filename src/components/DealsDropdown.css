@@ -1,0 +1,119 @@
+.deals-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.deals-dropdown .dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  color: #64ffda;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.deals-dropdown .dropdown-toggle:hover {
+  background: rgba(100, 255, 218, 0.2);
+  border-color: rgba(100, 255, 218, 0.5);
+  transform: translateY(-1px);
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(26, 26, 46, 0.95);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  margin-top: 4px;
+  animation: dropdownSlide 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: rgba(100, 255, 218, 0.1);
+  color: #64ffda;
+}
+
+@media (max-width: 768px) {
+  .deals-dropdown .dropdown-toggle {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+  
+  .dropdown-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-radius: 12px 12px 0 0;
+    margin-top: 0;
+    animation: bottomSheetSlide 0.3s ease;
+  }
+  
+  @keyframes bottomSheetSlide {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  
+  .dropdown-item {
+    padding: 16px 20px;
+    font-size: 0.9rem;
+  }
+} 
