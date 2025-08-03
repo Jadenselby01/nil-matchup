@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './MessagingPage.css';
 
 function MessagingPage({ currentUser, onBack }) {
@@ -9,7 +9,7 @@ function MessagingPage({ currentUser, onBack }) {
   const messagesEndRef = useRef(null);
 
   // Sample conversations data - only with businesses
-  const sampleConversations = [
+  const sampleConversations = useMemo(() => [
     {
       id: 1,
       participant: {
@@ -340,7 +340,7 @@ function MessagingPage({ currentUser, onBack }) {
         }
       ]
     }
-  ];
+  ], []);
 
   // Filter conversations based on current user
   useEffect(() => {

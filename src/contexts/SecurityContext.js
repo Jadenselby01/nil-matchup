@@ -1,145 +1,86 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { 
-  sessionManagement, 
-  loginAttempts, 
-  auditLog,
-  validation,
-  sanitization 
-} from '../utils/security';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { encryption, validation, sanitization, rateLimiting, sessionManagement, loginAttempts, auditLog, securityHeaders, dataClassification, gdpr } from '../utils/security';
 
-// Security context state
-const initialState = {
-  isAuthenticated: false,
-  user: null,
-  session: null,
-  loading: true,
-  securityLevel: 'medium', // low, medium, high
-  lastActivity: Date.now(),
-  failedLoginAttempts: 0,
-  lockoutUntil: null
-};
-
-// Security action types
+// Security actions
 const SECURITY_ACTIONS = {
   SET_AUTHENTICATED: 'SET_AUTHENTICATED',
   SET_USER: 'SET_USER',
-  SET_SESSION: 'SET_SESSION',
-  SET_LOADING: 'SET_LOADING',
-  SET_SECURITY_LEVEL: 'SET_SECURITY_LEVEL',
-  UPDATE_LAST_ACTIVITY: 'UPDATE_LAST_ACTIVITY',
-  INCREMENT_FAILED_ATTEMPTS: 'INCREMENT_FAILED_ATTEMPTS',
-  RESET_FAILED_ATTEMPTS: 'RESET_FAILED_ATTEMPTS',
+  SET_FAILED_ATTEMPTS: 'SET_FAILED_ATTEMPTS',
   SET_LOCKOUT: 'SET_LOCKOUT',
-  LOGOUT: 'LOGOUT'
+  RESET_FAILED_ATTEMPTS: 'RESET_FAILED_ATTEMPTS',
+  UPDATE_LAST_ACTIVITY: 'UPDATE_LAST_ACTIVITY',
+  SET_SECURITY_LEVEL: 'SET_SECURITY_LEVEL'
 };
 
 // Security reducer
 const securityReducer = (state, action) => {
   switch (action.type) {
     case SECURITY_ACTIONS.SET_AUTHENTICATED:
-      return {
-        ...state,
-        isAuthenticated: action.payload
-      };
-
+      return { ...state, isAuthenticated: action.payload };
     case SECURITY_ACTIONS.SET_USER:
-      return {
-        ...state,
-        user: action.payload
-      };
-
-    case SECURITY_ACTIONS.SET_SESSION:
-      return {
-        ...state,
-        session: action.payload
-      };
-
-    case SECURITY_ACTIONS.SET_LOADING:
-      return {
-        ...state,
-        loading: action.payload
-      };
-
-    case SECURITY_ACTIONS.SET_SECURITY_LEVEL:
-      return {
-        ...state,
-        securityLevel: action.payload
-      };
-
-    case SECURITY_ACTIONS.UPDATE_LAST_ACTIVITY:
-      return {
-        ...state,
-        lastActivity: Date.now()
-      };
-
-    case SECURITY_ACTIONS.INCREMENT_FAILED_ATTEMPTS:
-      return {
-        ...state,
-        failedLoginAttempts: state.failedLoginAttempts + 1
-      };
-
-    case SECURITY_ACTIONS.RESET_FAILED_ATTEMPTS:
-      return {
-        ...state,
-        failedLoginAttempts: 0,
-        lockoutUntil: null
-      };
-
+      return { ...state, user: action.payload };
+    case SECURITY_ACTIONS.SET_FAILED_ATTEMPTS:
+      return { ...state, failedAttempts: action.payload };
     case SECURITY_ACTIONS.SET_LOCKOUT:
-      return {
-        ...state,
-        lockoutUntil: action.payload
-      };
-
-    case SECURITY_ACTIONS.LOGOUT:
-      return {
-        ...initialState,
-        loading: false
-      };
-
+      return { ...state, lockoutUntil: action.payload };
+    case SECURITY_ACTIONS.RESET_FAILED_ATTEMPTS:
+      return { ...state, failedAttempts: 0, lockoutUntil: null };
+    case SECURITY_ACTIONS.UPDATE_LAST_ACTIVITY:
+      return { ...state, lastActivity: Date.now() };
+    case SECURITY_ACTIONS.SET_SECURITY_LEVEL:
+      return { ...state, securityLevel: action.payload };
     default:
       return state;
   }
 };
 
-// Create security context
+// Security context
 const SecurityContext = createContext();
 
-// Security provider component
+// Security provider
 export const SecurityProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(securityReducer, initialState);
+  const [state, dispatch] = useReducer(securityReducer, {
+    isAuthenticated: false,
+    user: null,
+    failedAttempts: 0,
+    lockoutUntil: null,
+    lastActivity: null,
+    securityLevel: 'medium'
+  });
 
   // Check authentication status on mount
-  useEffect(() => {
-    const checkAuthStatus = () => {
+  const checkAuthStatus = useCallback(() => {
+    try {
       const sessionId = localStorage.getItem('sessionId');
-      const token = localStorage.getItem('authToken');
+      const authToken = localStorage.getItem('authToken');
       const userData = localStorage.getItem('userData');
 
-      if (sessionId && token && userData) {
-        const sessionCheck = sessionManagement.validateSession(sessionId);
-        
-        if (sessionCheck.valid) {
+      if (sessionId && authToken && userData) {
+        const isValid = sessionManagement.validateSession(sessionId);
+        if (isValid) {
+          const user = JSON.parse(userData);
           dispatch({ type: SECURITY_ACTIONS.SET_AUTHENTICATED, payload: true });
-          dispatch({ type: SECURITY_ACTIONS.SET_USER, payload: JSON.parse(userData) });
-          dispatch({ type: SECURITY_ACTIONS.SET_SESSION, payload: sessionCheck.session });
-          
-          // Log successful session validation
-          auditLog.add('SESSION_VALIDATED', JSON.parse(userData).id, {
-            sessionId,
-            ip: sessionCheck.session.ip
-          });
+          dispatch({ type: SECURITY_ACTIONS.SET_USER, payload: user });
+          dispatch({ type: SECURITY_ACTIONS.UPDATE_LAST_ACTIVITY });
         } else {
-          // Session expired or invalid
-          logout();
+          // Session expired, clear data
+          localStorage.removeItem('sessionId');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
         }
       }
-      
-      dispatch({ type: SECURITY_ACTIONS.SET_LOADING, payload: false });
-    };
-
-    checkAuthStatus();
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      // Clear corrupted data
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+    }
   }, []);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   // Monitor user activity
   useEffect(() => {
@@ -160,28 +101,8 @@ export const SecurityProvider = ({ children }) => {
     };
   }, []);
 
-  // Check for session timeout
-  useEffect(() => {
-    const checkSessionTimeout = () => {
-      if (state.isAuthenticated && state.lastActivity) {
-        const timeout = 30 * 60 * 1000; // 30 minutes
-        const timeSinceLastActivity = Date.now() - state.lastActivity;
-        
-        if (timeSinceLastActivity > timeout) {
-          auditLog.add('SESSION_TIMEOUT', state.user?.id, {
-            lastActivity: new Date(state.lastActivity).toISOString()
-          });
-          logout();
-        }
-      }
-    };
-
-    const interval = setInterval(checkSessionTimeout, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [state.isAuthenticated, state.lastActivity, state.user, logout]);
-
   // Security functions
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       // Validate input
       if (!validation.isValidEmail(email)) {
@@ -237,67 +158,85 @@ export const SecurityProvider = ({ children }) => {
       dispatch({ type: SECURITY_ACTIONS.RESET_FAILED_ATTEMPTS });
       dispatch({ type: SECURITY_ACTIONS.UPDATE_LAST_ACTIVITY });
 
-      // Record successful login
-      loginAttempts.recordAttempt(email, true);
-      auditLog.add('LOGIN_SUCCESS', email, { userId: userData.id });
-
       return { success: true, user: userData };
     } catch (error) {
-      // Record failed login
-      loginAttempts.recordAttempt(email, false);
-      dispatch({ type: SECURITY_ACTIONS.INCREMENT_FAILED_ATTEMPTS });
+      // Increment failed attempts
+      dispatch({ type: SECURITY_ACTIONS.SET_FAILED_ATTEMPTS, payload: state.failedAttempts + 1 });
       
-      auditLog.add('LOGIN_FAILED', email, { error: error.message });
-      throw error;
-    }
-  };
-
-  const logout = () => {
-    const sessionId = localStorage.getItem('sessionId');
-    const userId = state.user?.id;
-
-    // Clean up session
-    if (sessionId) {
-      sessionManagement.destroySession(sessionId);
-    }
-
-    // Clean up localStorage
-    localStorage.removeItem('sessionId');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-
-    // Log logout
-    if (userId) {
-      auditLog.add('LOGOUT', userId, {
-        ip: 'unknown',
+      // Log failed attempt
+      auditLog.add('LOGIN_FAILED', email, {
+        error: error.message,
+        ip: await getClientIP(),
         userAgent: navigator.userAgent
       });
+
+      throw error;
     }
+  }, [state.lockoutUntil, state.failedAttempts]);
 
-    dispatch({ type: SECURITY_ACTIONS.LOGOUT });
-  };
+  const logout = useCallback(() => {
+    try {
+      // Clear session
+      const sessionId = localStorage.getItem('sessionId');
+      if (sessionId) {
+        sessionManagement.destroySession(sessionId);
+      }
 
-  const updateSecurityLevel = (level) => {
-    dispatch({ type: SECURITY_ACTIONS.SET_SECURITY_LEVEL, payload: level });
-  };
+      // Clear localStorage
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
 
-  const validateSession = () => {
-    const sessionId = localStorage.getItem('sessionId');
-    if (!sessionId) return false;
+      // Reset state
+      dispatch({ type: SECURITY_ACTIONS.SET_AUTHENTICATED, payload: false });
+      dispatch({ type: SECURITY_ACTIONS.SET_USER, payload: null });
+      dispatch({ type: SECURITY_ACTIONS.RESET_FAILED_ATTEMPTS });
 
-    const sessionCheck = sessionManagement.validateSession(sessionId);
-    return sessionCheck.valid;
-  };
+      // Log logout
+      auditLog.add('LOGOUT', state.user?.id, {
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }, [state.user?.id]);
 
-  const getSecurityHeaders = () => {
-    return {
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
+  // Check for session timeout
+  useEffect(() => {
+    const checkSessionTimeout = () => {
+      if (state.isAuthenticated && state.lastActivity) {
+        const timeout = 30 * 60 * 1000; // 30 minutes
+        const timeSinceLastActivity = Date.now() - state.lastActivity;
+        
+        if (timeSinceLastActivity > timeout) {
+          auditLog.add('SESSION_TIMEOUT', state.user?.id, {
+            lastActivity: new Date(state.lastActivity).toISOString()
+          });
+          logout();
+        }
+      }
     };
-  };
+
+    const interval = setInterval(checkSessionTimeout, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [state.isAuthenticated, state.lastActivity, state.user, logout]);
+
+  // Additional security functions
+  const updateSecurityLevel = useCallback((level) => {
+    dispatch({ type: SECURITY_ACTIONS.SET_SECURITY_LEVEL, payload: level });
+  }, []);
+
+  const validateSession = useCallback(() => {
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+      return sessionManagement.validateSession(sessionId);
+    }
+    return false;
+  }, []);
+
+  const getSecurityHeaders = useCallback(() => {
+    return securityHeaders.generateHeaders();
+  }, []);
 
   // Context value
   const value = {

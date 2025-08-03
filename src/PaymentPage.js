@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './PaymentPage.css';
 
 function PaymentPage({ paymentData, onBack, onSuccess }) {
@@ -28,7 +28,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
 
   const finalPaymentData = paymentData || defaultPaymentData;
 
-  const initializePaymentIntent = async () => {
+  const initializePaymentIntent = useCallback(async () => {
     try {
       // Simulate payment intent creation
       // setPaymentIntent({
@@ -40,7 +40,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
       console.error('Payment intent error:', err);
       setError('Payment initialization failed. Please refresh and try again.');
     }
-  };
+  }, [finalPaymentData]);
 
   useEffect(() => {
     // Auto-fill email if available

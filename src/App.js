@@ -316,7 +316,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'players', 'athlete-login', 'athlete-signup', 'business-login', 'business-signup', 'athlete-profile', 'business-profile', 'athlete-dashboard', 'business-dashboard', 'create-offer', 'offers', 'messaging', 'payment', 'payment-history'
   const [userType, setUserType] = useState(''); // 'athlete' or 'business'
   const [currentUser, setCurrentUser] = useState(null); // For messaging system
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const [paymentData, setPaymentData] = useState(null); // For payment processing
+  // const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [showLegalDocuments, setShowLegalDocuments] = useState(false);
   const [showPolicies, setShowPolicies] = useState(false);
@@ -328,7 +329,7 @@ function App() {
   const [showAutoAdProofTool, setShowAutoAdProofTool] = useState(false);
   const [showMicroCoaching, setShowMicroCoaching] = useState(false);
   const [currentDeal, setCurrentDeal] = useState(null);
-  const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
+  // const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState(null);
@@ -358,7 +359,7 @@ function App() {
         if (user && typeof user === 'object' && user.type) {
           setCurrentUser(user);
           setUserType(user.type);
-          setIsAuthenticated(true);
+          // setIsAuthenticated(true);
           localStorage.setItem('currentUser', JSON.stringify(user));
           // Check if user has completed profile
           // const hasProfile = localStorage.getItem('profileCompleted');
@@ -680,10 +681,10 @@ function App() {
           setError(error.message);
         } else {
           setCurrentUser(data.user);
-          setIsAuthenticated(true);
+          // setIsAuthenticated(true);
           localStorage.setItem('currentUser', JSON.stringify(data.user));
           // Check if user has completed profile
-          const hasProfile = localStorage.getItem('profileCompleted');
+          // const hasProfile = localStorage.getItem('profileCompleted');
           
           setCurrentPage(type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
         }
@@ -1200,7 +1201,7 @@ function App() {
     const handleLogout = async () => {
       await AuthService.signOut();
       setCurrentUser(null);
-      setIsAuthenticated(false);
+      // setIsAuthenticated(false);
       localStorage.removeItem('currentUser');
       localStorage.removeItem('profileCompleted');
       localStorage.removeItem('legalDocumentsCompleted');
@@ -1274,7 +1275,7 @@ function App() {
     const handleLogout = async () => {
       await AuthService.signOut();
       setCurrentUser(null);
-      setIsAuthenticated(false);
+      // setIsAuthenticated(false);
       localStorage.removeItem('currentUser');
       localStorage.removeItem('profileCompleted');
       localStorage.removeItem('legalDocumentsCompleted');
@@ -1395,7 +1396,7 @@ function App() {
                 onClick={async () => {
                   await AuthService.signOut();
                   setCurrentUser(null);
-                  setIsAuthenticated(false);
+                  // setIsAuthenticated(false);
                   localStorage.removeItem('currentUser');
                   localStorage.removeItem('profileCompleted');
                   localStorage.removeItem('legalDocumentsCompleted');
@@ -1553,7 +1554,7 @@ function App() {
         return <PaymentProcessingPage 
           dealId={currentDeal?.id}
           onComplete={(completedDeal) => {
-            setShowPaymentProcessing(false);
+            // setShowPaymentProcessing(false); // This state variable is commented out
             setCurrentDeal(completedDeal);
             setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
             alert('✅ Payment processing completed! Your deal is now active.');

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './DealsPage.css';
 
 function DealsPage({ currentUser, onBack }) {
   const [deals, setDeals] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'proposed', 'accepted', 'completed'
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Sample deals data
-  const sampleDeals = [
+  const sampleDeals = useMemo(() => [
     {
       id: 1,
       title: "Game Day Menu Promotion",
@@ -149,7 +151,7 @@ function DealsPage({ currentUser, onBack }) {
       deadline: "2024-01-31T00:00:00Z",
       type: "event_promotion"
     }
-  ];
+  ], []);
 
   useEffect(() => {
     let userDeals = [];

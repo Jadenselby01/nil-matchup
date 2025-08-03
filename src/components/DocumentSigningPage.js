@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './DocumentSigningPage.css';
 
 const DocumentSigningPage = ({ user, userType, onComplete, onClose }) => {
@@ -10,7 +10,7 @@ const DocumentSigningPage = ({ user, userType, onComplete, onClose }) => {
   const [readingProgress, setReadingProgress] = useState({});
   const [showReadingMessage, setShowReadingMessage] = useState(true);
 
-  const documents = userType === 'athlete' ? [
+  const documents = useMemo(() => userType === 'athlete' ? [
     {
       id: 'nil-endorsement',
       title: 'NIL Endorsement Agreement',
@@ -120,7 +120,7 @@ const DocumentSigningPage = ({ user, userType, onComplete, onClose }) => {
       effectiveDate: new Date().toLocaleDateString(),
       parties: [`${user?.name || 'Business Name'}`, 'NIL Matchup Platform']
     }
-  ];
+  ], [userType, user]);
 
   useEffect(() => {
     // Initialize reading progress for all documents
