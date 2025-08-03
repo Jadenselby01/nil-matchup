@@ -3,7 +3,7 @@ import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { stripeService } from '../services/stripeService';
 import './PaymentForm.css';
 
-const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
+const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) => {
   const stripe = useStripe();
   const elements = useElements();
   
@@ -12,7 +12,16 @@ const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState('idle');
 
+  // Check if user can make payments
+  const canMakePayment = currentUser && currentUser.type === 'business';
+
   const initializePayment = useCallback(async () => {
+    // Only allow businesses to initialize payments
+    if (!canMakePayment) {
+      setError('Only businesses can make payments. Athletes receive payments.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -30,16 +39,21 @@ const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
     } finally {
       setLoading(false);
     }
-  }, [deal]);
+  }, [deal, canMakePayment]);
 
   useEffect(() => {
-    if (deal && deal.amount) {
+    if (deal && deal.amount && canMakePayment) {
       initializePayment();
     }
-  }, [deal, initializePayment]);
+  }, [deal, initializePayment, canMakePayment]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!canMakePayment) {
+      setError('Only businesses can make payments. Athletes receive payments.');
+      return;
+    }
 
     if (!stripe || !elements || !clientSecret) {
       setError('Payment system not ready. Please try again.');
@@ -118,6 +132,26 @@ const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
     },
   };
 
+  // Show different content based on user type
+  if (!canMakePayment) {
+    return (
+      <div className="payment-form-container">
+        <div className="payment-header">
+          <h3>Payment Information</h3>
+        </div>
+        <div className="payment-info">
+          <p><strong>Deal:</strong> {deal.ad_type}</p>
+          <p><strong>Amount:</strong> ${deal.amount}</p>
+          <p><strong>Business:</strong> {deal.business?.company_name}</p>
+        </div>
+        <div className="payment-notice">
+          <p>ℹ️ As an athlete, you will receive payments from businesses.</p>
+          <p>Businesses will process payments through their dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (paymentStatus === 'success') {
     return (
       <div className="payment-success">
@@ -142,7 +176,7 @@ const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
         <div className="deal-summary">
           <p><strong>Deal:</strong> {deal.ad_type}</p>
           <p><strong>Amount:</strong> ${deal.amount}</p>
-          <p><strong>Business:</strong> {deal.business?.company_name}</p>
+          <p><strong>Athlete:</strong> {deal.athlete?.name}</p>
         </div>
       </div>
 

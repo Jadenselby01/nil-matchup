@@ -34,6 +34,36 @@
   color: #333;
 }
 
+.payment-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.payment-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.payment-info strong {
+  color: #333;
+}
+
+.payment-notice {
+  background: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.payment-notice p {
+  margin: 0.5rem 0;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
 .payment-form {
   display: flex;
   flex-direction: column;

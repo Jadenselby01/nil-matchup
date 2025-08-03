@@ -81,6 +81,7 @@ function PaymentPage({ currentUser, onBack }) {
         <Elements stripe={stripePromise}>
           <PaymentForm
             deal={deal}
+            currentUser={currentUser}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
           />
