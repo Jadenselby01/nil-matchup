@@ -1214,11 +1214,12 @@ function App() {
         <header className="App-header">
           <div className="header-top">
             <div className="dashboard-actions">
-              <DropdownMenu
-                onViewDocuments={() => setShowLegalDocuments(true)}
-                onViewPolicies={() => setShowPolicies(true)}
-                onViewSettings={() => setShowSettings(true)}
-              />
+              <button 
+                className="settings-btn"
+                onClick={() => setShowSettings(true)}
+              >
+                Settings
+              </button>
               <button 
                 className="logout-btn"
                 onClick={handleLogout}
@@ -1236,14 +1237,24 @@ function App() {
           >
             NIL Opportunities
           </button>
-          <DealsDropdown
-            onViewDeals={() => setCurrentPage('deals')}
-          />
-          <CommunicationDropdown
-            onMessages={() => setCurrentPage('messaging')}
-            onDeals={() => setCurrentPage('deals')}
-            onPayments={() => setCurrentPage('payment')}
-          />
+          <button 
+            className="action-btn"
+            onClick={() => setCurrentPage('deals')}
+          >
+            Deals
+          </button>
+          <button 
+            className="action-btn"
+            onClick={() => setCurrentPage('messaging')}
+          >
+            Messages
+          </button>
+          <button 
+            className="action-btn"
+            onClick={() => setCurrentPage('payment')}
+          >
+            Payment
+          </button>
         </div>
       </header>
 
