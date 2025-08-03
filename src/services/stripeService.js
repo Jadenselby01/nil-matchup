@@ -208,5 +208,66 @@ export const stripeService = {
       console.error('Error getting payment stats:', error);
       throw error;
     }
+  },
+
+  // Smart Templates
+  createSmartTemplate: async (templateData) => {
+    const { data, error } = await supabase
+      .from('smart_templates')
+      .insert([templateData])
+      .select();
+    return { data, error };
+  },
+
+  getSmartTemplates: async (businessId) => {
+    const { data, error } = await supabase
+      .from('smart_templates')
+      .select('*')
+      .eq('business_id', businessId);
+    return { data, error };
+  },
+
+  // Athlete Payment Methods
+  saveAthletePaymentMethod: async (athleteId, paymentMethodId) => {
+    try {
+      const { data, error } = await supabase
+        .from('athlete_payment_methods')
+        .upsert([{
+          athlete_id: athleteId,
+          stripe_payment_method_id: paymentMethodId,
+          is_active: true,
+          created_at: new Date().toISOString()
+        }])
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return data[0];
+    } catch (error) {
+      console.error('Error saving athlete payment method:', error);
+      throw error;
+    }
+  },
+
+  getAthletePaymentMethod: async (athleteId) => {
+    try {
+      const { data, error } = await supabase
+        .from('athlete_payment_methods')
+        .select('*')
+        .eq('athlete_id', athleteId)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting athlete payment method:', error);
+      throw error;
+    }
   }
 }; 
