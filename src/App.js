@@ -1542,12 +1542,8 @@ function App() {
         />;
       case 'payment':
         return <PaymentPage 
-          paymentData={null}
+          currentUser={currentUser}
           onBack={() => setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
-          onSuccess={() => {
-            alert('Payment successful! Your transaction has been completed.');
-            setCurrentPage(userType === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
-          }}
         />;
 
       case 'payment-processing':
