@@ -3,8 +3,6 @@ import './App.css';
 import AuthService from './services/authService';
 import { SecurityProvider } from './contexts/SecurityContext';
 import Notification from './components/Notification';
-import DealsDropdown from './components/DealsDropdown';
-import CommunicationDropdown from './components/CommunicationDropdown';
 import MessagingPage from './MessagingPage';
 import PaymentPage from './PaymentPage';
 import PaymentProcessingPage from './PaymentProcessingPage';
