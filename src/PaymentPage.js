@@ -11,7 +11,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState(1); // 1: Payment details, 2: Confirmation, 3: Success
   const [error, setError] = useState('');
-  const [paymentIntent, setPaymentIntent] = useState(null);
+  // const [paymentIntent, setPaymentIntent] = useState(null);
 
   // Default payment data if none provided
   const defaultPaymentData = {
@@ -31,11 +31,11 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
   const initializePaymentIntent = async () => {
     try {
       // Simulate payment intent creation
-      setPaymentIntent({
-        id: 'pi_' + Math.random().toString(36).substr(2, 9),
-        amount: finalPaymentData.amount,
-        currency: finalPaymentData.currency
-      });
+      // setPaymentIntent({
+      //   id: 'pi_' + Math.random().toString(36).substr(2, 9),
+      //   amount: finalPaymentData.amount,
+      //   currency: finalPaymentData.currency
+      // });
     } catch (err) {
       console.error('Payment intent error:', err);
       setError('Payment initialization failed. Please refresh and try again.');
@@ -50,7 +50,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
     
     // Initialize payment intent
     initializePaymentIntent();
-  }, [finalPaymentData]);
+  }, [finalPaymentData, initializePaymentIntent]);
 
   const formatCardNumber = (value) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');

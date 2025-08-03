@@ -152,40 +152,22 @@ function DealsPage({ currentUser, onBack }) {
   ];
 
   useEffect(() => {
-    // Filter deals based on current user
-    let userDeals = sampleDeals;
+    let userDeals = [];
     
-    if (currentUser) {
-      // For business users, show only deals where business matches their name
-      if (currentUser.userType === 'business' || currentUser.businessName || currentUser.name?.toLowerCase().includes('nil')) {
-        const businessName = currentUser.businessName || currentUser.name || '';
-        userDeals = sampleDeals.filter(deal => {
-          const dealBusiness = deal.business.toLowerCase();
-          const userBusiness = businessName.toLowerCase();
-          
-          // Check for exact match or partial match
-          return dealBusiness === userBusiness || 
-                 dealBusiness.includes(userBusiness) || 
-                 userBusiness.includes(dealBusiness) ||
-                 (userBusiness.includes('nil') && dealBusiness.includes('nil'));
-        });
-      }
-      // For athlete users, show only deals where athlete matches their name
-      else if (currentUser.userType === 'athlete' || currentUser.athleteName) {
-        const athleteName = currentUser.athleteName || currentUser.name || '';
-        userDeals = sampleDeals.filter(deal => {
-          const dealAthlete = deal.athlete.toLowerCase();
-          const userAthlete = athleteName.toLowerCase();
-          
-          return dealAthlete === userAthlete || 
-                 dealAthlete.includes(userAthlete) || 
-                 userAthlete.includes(dealAthlete);
-        });
-      }
+    if (currentUser?.userType === 'business' || currentUser?.businessName) {
+      // Business users see proposals from athletes
+      userDeals = sampleDeals.filter(deal => 
+        deal.businessName === (currentUser.businessName || currentUser.name || 'NIL Matchup')
+      );
+    } else {
+      // Athletes see their own deals
+      userDeals = sampleDeals.filter(deal => 
+        deal.athleteName === (currentUser.athleteName || currentUser.name || 'Michael Johnson')
+      );
     }
     
     setDeals(userDeals);
-  }, [currentUser]);
+  }, [currentUser, sampleDeals]);
 
   const filteredDeals = deals.filter(deal => {
     if (filter === 'all') return true;

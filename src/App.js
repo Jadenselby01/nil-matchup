@@ -316,7 +316,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'players', 'athlete-login', 'athlete-signup', 'business-login', 'business-signup', 'athlete-profile', 'business-profile', 'athlete-dashboard', 'business-dashboard', 'create-offer', 'offers', 'messaging', 'payment', 'payment-history'
   const [userType, setUserType] = useState(''); // 'athlete' or 'business'
   const [currentUser, setCurrentUser] = useState(null); // For messaging system
-  // const [paymentData, setPaymentData] = useState(null); // For payment processing
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [showLegalDocuments, setShowLegalDocuments] = useState(false);
@@ -360,6 +359,10 @@ function App() {
           setCurrentUser(user);
           setUserType(user.type);
           setIsAuthenticated(true);
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          // Check if user has completed profile
+          // const hasProfile = localStorage.getItem('profileCompleted');
+          
           setCurrentPage(user.type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
         } else {
           // Invalid user data, clear it
@@ -568,26 +571,26 @@ function App() {
   ];
 
   // Image upload handler
-  const handleImageUpload = (event, setImageFunction) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImageFunction(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // const handleImageUpload = (event, setImageFunction) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       setImageFunction(e.target.result);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
   // UX Overhaul Handler Functions
 
-  const handleDealCreate = (dealData) => {
-    setShowSmartDealTemplates(false);
-    // Create the deal using the template data
-    console.log('Creating deal:', dealData);
-    // In a real app, this would save to the database
-    alert('Deal created successfully!');
-  };
+  // const handleDealCreate = (dealData) => {
+  //   setShowSmartDealTemplates(false);
+  //   // Create the deal using the template data
+  //   console.log('Creating deal:', dealData);
+  //   // In a real app, this would save to the database
+  //   alert('Deal created successfully!');
+  // };
 
   const handleAdProofComplete = (verificationData) => {
     setShowAutoAdProofTool(false);
@@ -600,10 +603,10 @@ function App() {
     alert('✅ Coaching completed! You\'re ready to create amazing NIL content.');
   };
 
-  const handleProcessPayment = (deal) => {
-    setCurrentDeal(deal);
-    setCurrentPage('payment-processing');
-  };
+  // const handleProcessPayment = (deal) => {
+  //   setCurrentDeal(deal);
+  //   setCurrentPage('payment-processing');
+  // };
 
   const handleTemplateCreated = (templateData) => {
     showNotification(

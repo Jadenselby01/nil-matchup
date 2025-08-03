@@ -153,7 +153,7 @@ function PaymentHistory({ onBack }) {
 
   useEffect(() => {
     filterPayments();
-  }, [payments, searchQuery, statusFilter, dateFilter]);
+  }, [payments, searchQuery, statusFilter, dateFilter, filterPayments]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

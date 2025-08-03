@@ -42,7 +42,7 @@ const PaymentProcessingPage = ({ dealId, onComplete, onBack }) => {
     }
   });
 
-  const [userType, setUserType] = useState(''); // 'athlete' or 'business'
+  // const [userType, setUserType] = useState(''); // 'athlete' or 'business'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -80,7 +80,7 @@ const PaymentProcessingPage = ({ dealId, onComplete, onBack }) => {
   useEffect(() => {
     // Simulate getting user type from localStorage or context
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    setUserType(currentUser.userType || 'business');
+    // setUserType(currentUser.userType || 'business'); // This line was commented out
   }, []);
 
   const handleBusinessPaymentMethodChange = (method) => {

@@ -178,7 +178,7 @@ export const SecurityProvider = ({ children }) => {
 
     const interval = setInterval(checkSessionTimeout, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [state.isAuthenticated, state.lastActivity, state.user]);
+  }, [state.isAuthenticated, state.lastActivity, state.user, logout]);
 
   // Security functions
   const login = async (email, password) => {

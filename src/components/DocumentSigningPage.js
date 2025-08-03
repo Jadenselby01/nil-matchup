@@ -5,7 +5,7 @@ const DocumentSigningPage = ({ user, userType, onComplete, onClose }) => {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [documentsRead, setDocumentsRead] = useState([]);
   const [signature, setSignature] = useState(null);
-  const [showSignatureCapture, setShowSignatureCapture] = useState(false);
+  // const [showSignatureCapture, setShowSignatureCapture] = useState(false);
   const [isReading, setIsReading] = useState(true);
   const [readingProgress, setReadingProgress] = useState({});
   const [showReadingMessage, setShowReadingMessage] = useState(true);
@@ -123,13 +123,13 @@ const DocumentSigningPage = ({ user, userType, onComplete, onClose }) => {
   ];
 
   useEffect(() => {
-    // Initialize reading progress
+    // Initialize reading progress for all documents
     const initialProgress = {};
     documents.forEach(doc => {
       initialProgress[doc.id] = false;
     });
     setReadingProgress(initialProgress);
-  }, []);
+  }, [documents]);
 
   const handleDocumentRead = (documentId) => {
     setReadingProgress(prev => ({
@@ -191,7 +191,7 @@ const DocumentSigningPage = ({ user, userType, onComplete, onClose }) => {
   };
 
   const currentDocument = documents[currentDocumentIndex];
-  const allDocumentsRead = documents.every(doc => readingProgress[doc.id]);
+  // const allDocumentsRead = documents.every(doc => readingProgress[doc.id]);
 
   if (isReading) {
     return (

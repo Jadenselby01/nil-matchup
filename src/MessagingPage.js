@@ -342,37 +342,24 @@ function MessagingPage({ currentUser, onBack }) {
     }
   ];
 
+  // Filter conversations based on current user
   useEffect(() => {
-    // Filter conversations based on current user
-    let userConversations = sampleConversations;
+    let userConversations = [];
     
-    if (currentUser) {
-      // For business users, show only conversations with athletes who have proposed deals
-      if (currentUser.userType === 'business' || currentUser.businessName || currentUser.name?.toLowerCase().includes('nil')) {
-        const businessName = currentUser.businessName || currentUser.name || '';
-        userConversations = sampleConversations.filter(conv => {
-          // Show conversations where the business is NIL Matchup (senderId 999) or matches the business name
-          const isNILMatchupConversation = conv.messages.some(msg => msg.senderId === 999);
-          const businessNameMatch = businessName.toLowerCase().includes('nil') && conv.participant.type === 'athlete';
-          
-          return isNILMatchupConversation || businessNameMatch;
-        });
-      }
-      // For athlete users, show only conversations with businesses
-      else if (currentUser.userType === 'athlete' || currentUser.athleteName) {
-        const athleteName = currentUser.athleteName || currentUser.name || '';
-        userConversations = sampleConversations.filter(conv => {
-          // Show conversations where the athlete is the current user
-          const isAthleteConversation = conv.participant.type === 'business';
-          const athleteNameMatch = conv.participant.name.toLowerCase().includes(athleteName.toLowerCase());
-          
-          return isAthleteConversation && athleteNameMatch;
-        });
-      }
+    if (currentUser?.type === 'business') {
+      // Business users see conversations with athletes
+      userConversations = sampleConversations.filter(conv => 
+        conv.participant.type === 'athlete'
+      );
+    } else {
+      // Athletes see conversations with businesses
+      userConversations = sampleConversations.filter(conv => 
+        conv.participant.type === 'business'
+      );
     }
     
     setConversations(userConversations);
-  }, [currentUser]);
+  }, [currentUser, sampleConversations]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -384,7 +371,7 @@ function MessagingPage({ currentUser, onBack }) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }
     }
-  }, [selectedConversation?.messages?.length, currentUser.id]);
+  }, [selectedConversation, currentUser.id]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedConversation) return;
