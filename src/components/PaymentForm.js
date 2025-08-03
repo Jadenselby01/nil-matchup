@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { stripeService } from '../services/stripeService';
 import './PaymentForm.css';
@@ -12,13 +12,7 @@ const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState('idle');
 
-  useEffect(() => {
-    if (deal && deal.amount) {
-      initializePayment();
-    }
-  }, [deal]);
-
-  const initializePayment = async () => {
+  const initializePayment = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -36,7 +30,13 @@ const PaymentForm = ({ deal, onPaymentSuccess, onPaymentError }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [deal]);
+
+  useEffect(() => {
+    if (deal && deal.amount) {
+      initializePayment();
+    }
+  }, [deal, initializePayment]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
