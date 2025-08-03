@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { encryption, validation, sanitization, rateLimiting, sessionManagement, loginAttempts, auditLog, securityHeaders, dataClassification, gdpr } from '../utils/security';
+import { validation, sanitization, sessionManagement, loginAttempts, auditLog, securityHeaders } from '../utils/security';
 
 // Security actions
 const SECURITY_ACTIONS = {

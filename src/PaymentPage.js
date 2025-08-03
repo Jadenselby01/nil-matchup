@@ -40,7 +40,7 @@ function PaymentPage({ paymentData, onBack, onSuccess }) {
       console.error('Payment intent error:', err);
       setError('Payment initialization failed. Please refresh and try again.');
     }
-  }, [finalPaymentData]);
+  }, []);
 
   useEffect(() => {
     // Auto-fill email if available

@@ -4,8 +4,8 @@ import './DealsPage.css';
 function DealsPage({ currentUser, onBack }) {
   const [deals, setDeals] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'proposed', 'accepted', 'completed'
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [selectedPayment, setSelectedPayment] = useState(null);
+  // const [isLoading, setIsLoading] = useState(true);
 
   // Sample deals data
   const sampleDeals = useMemo(() => [
