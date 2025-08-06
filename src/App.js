@@ -296,17 +296,238 @@ const CreateOfferPage = ({ onBack }) => (
 );
 
 // OffersPage Component
-const OffersPage = ({ onBack }) => (
-  <div className="page-container">
-    <header className="page-header">
-      <button className="back-btn" onClick={onBack}>← Back</button>
-      <h1>Offers</h1>
-    </header>
-    <main className="page-content">
-      <p>Offers list would go here.</p>
-    </main>
-  </div>
-);
+const OffersPage = ({ onBack }) => {
+  // Sample business deals with different social media tiers
+  const businessDeals = [
+    {
+      id: 1,
+      business: {
+        name: "Local Sports Shop",
+        logo: "https://via.placeholder.com/60x60/4CAF50/white?text=LS",
+        industry: "Retail"
+      },
+      title: "Social Media Campaign",
+      description: "Promote our new athletic gear collection",
+      tiers: [
+        {
+          type: "Instagram Story",
+          price: 150,
+          description: "1 story post featuring our products",
+          duration: "24 hours"
+        },
+        {
+          type: "Instagram Post",
+          price: 300,
+          description: "1 feed post with caption and hashtags",
+          duration: "Permanent"
+        },
+        {
+          type: "Instagram Reel",
+          price: 500,
+          description: "1 creative reel showcasing products",
+          duration: "Permanent"
+        },
+        {
+          type: "Full Campaign",
+          price: 800,
+          description: "Story + Post + Reel package",
+          duration: "1 week"
+        }
+      ],
+      requirements: "Must be active on Instagram with 1000+ followers",
+      targetAudience: "College students, sports enthusiasts"
+    },
+    {
+      id: 2,
+      business: {
+        name: "Fitness First Gym",
+        logo: "https://via.placeholder.com/60x60/2196F3/white?text=FF",
+        industry: "Health & Fitness"
+      },
+      title: "Gym Promotion",
+      description: "Showcase our new workout classes and equipment",
+      tiers: [
+        {
+          type: "Instagram Story",
+          price: 200,
+          description: "1 story showing gym workout",
+          duration: "24 hours"
+        },
+        {
+          type: "Instagram Post",
+          price: 400,
+          description: "1 post with gym tour or workout",
+          duration: "Permanent"
+        },
+        {
+          type: "TikTok Video",
+          price: 600,
+          description: "1 TikTok workout challenge",
+          duration: "Permanent"
+        },
+        {
+          type: "Full Package",
+          price: 1000,
+          description: "Story + Post + TikTok package",
+          duration: "1 week"
+        }
+      ],
+      requirements: "Must be comfortable with fitness content",
+      targetAudience: "Fitness enthusiasts, students"
+    },
+    {
+      id: 3,
+      business: {
+        name: "Campus Coffee Co.",
+        logo: "https://via.placeholder.com/60x60/795548/white?text=CC",
+        industry: "Food & Beverage"
+      },
+      title: "Coffee Shop Promotion",
+      description: "Promote our new seasonal drinks and study atmosphere",
+      tiers: [
+        {
+          type: "Instagram Story",
+          price: 100,
+          description: "1 story featuring our drinks",
+          duration: "24 hours"
+        },
+        {
+          type: "Instagram Post",
+          price: 250,
+          description: "1 post with coffee and study setup",
+          duration: "Permanent"
+        },
+        {
+          type: "Study Session Content",
+          price: 400,
+          description: "Multiple stories during study session",
+          duration: "1 day"
+        },
+        {
+          type: "Complete Package",
+          price: 600,
+          description: "Story + Post + Study session",
+          duration: "1 week"
+        }
+      ],
+      requirements: "Must be comfortable with food/drink content",
+      targetAudience: "Students, coffee lovers"
+    },
+    {
+      id: 4,
+      business: {
+        name: "Tech Startup XYZ",
+        logo: "https://via.placeholder.com/60x60/9C27B0/white?text=TS",
+        industry: "Technology"
+      },
+      title: "App Launch Promotion",
+      description: "Help us launch our new student productivity app",
+      tiers: [
+        {
+          type: "Instagram Story",
+          price: 300,
+          description: "1 story about app features",
+          duration: "24 hours"
+        },
+        {
+          type: "Instagram Post",
+          price: 600,
+          description: "1 detailed post about app benefits",
+          duration: "Permanent"
+        },
+        {
+          type: "Video Review",
+          price: 900,
+          description: "1 video review of the app",
+          duration: "Permanent"
+        },
+        {
+          type: "Launch Campaign",
+          price: 1500,
+          description: "Story + Post + Video + ongoing mentions",
+          duration: "2 weeks"
+        }
+      ],
+      requirements: "Must be tech-savvy and active on social media",
+      targetAudience: "Students, young professionals"
+    }
+  ];
+
+  const [selectedDeal, setSelectedDeal] = useState(null);
+  const [selectedTier, setSelectedTier] = useState(null);
+
+  const handleProposeDeal = (deal, tier) => {
+    setSelectedDeal(deal);
+    setSelectedTier(tier);
+    // Navigate to create proposal page with deal details
+    setCurrentPage('create-proposal');
+  };
+
+  return (
+    <div className="offers-page">
+      <header className="page-header">
+        <button onClick={onBack} className="back-button">
+          ← Back to Dashboard
+        </button>
+        <h1>NIL Opportunities</h1>
+        <p>Browse available deals from local businesses</p>
+      </header>
+
+      <div className="deals-grid">
+        {businessDeals.map(deal => (
+          <div key={deal.id} className="deal-card">
+            <div className="deal-header">
+              <div className="business-info">
+                <img src={deal.business.logo} alt={deal.business.name} className="business-logo" />
+                <div>
+                  <h3>{deal.business.name}</h3>
+                  <span className="industry-tag">{deal.business.industry}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="deal-content">
+              <h4>{deal.title}</h4>
+              <p className="deal-description">{deal.description}</p>
+              
+              <div className="pricing-tiers">
+                <h5>Available Packages:</h5>
+                {deal.tiers.map((tier, index) => (
+                  <div key={index} className="tier-card">
+                    <div className="tier-header">
+                      <h6>{tier.type}</h6>
+                      <span className="tier-price">${tier.price}</span>
+                    </div>
+                    <p className="tier-description">{tier.description}</p>
+                    <div className="tier-details">
+                      <span className="duration">Duration: {tier.duration}</span>
+                    </div>
+                    <button 
+                      className="propose-btn"
+                      onClick={() => handleProposeDeal(deal, tier)}
+                    >
+                      Propose Deal
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="deal-requirements">
+                <h5>Requirements:</h5>
+                <p>{deal.requirements}</p>
+              </div>
+
+              <div className="target-audience">
+                <h5>Target Audience:</h5>
+                <p>{deal.targetAudience}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
