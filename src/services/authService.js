@@ -1,44 +1,46 @@
-import { auth, db } from '../config/supabase';
+import { supabase, auth, db } from '../config/supabase';
 
 class AuthService {
-  constructor() {
-    this.currentUser = null;
-    this.userProfile = null;
-    this.isAuthenticated = false;
-  }
-
   // Sign up new user
-  async signUp(email, password, userType, userData = {}) {
+  async signUp(email, password, userType, userData) {
     try {
-      // Create auth user
+      // Create user in Supabase Auth
       const { data: authData, error: authError } = await auth.signUp(email, password, userType);
       
-      if (authError) throw authError;
+      if (authError) {
+        throw authError;
+      }
 
       if (authData.user) {
-        // Create user profile
+        // Create profile in appropriate table
         const profileData = {
           id: authData.user.id,
-          email,
-          user_type: userType,
+          email: email,
           ...userData
         };
 
-        const { data: profileResult, error: profileError } = await db.createUser(profileData);
-        
-        if (profileError) throw profileError;
+        let profileResult;
+        if (userType === 'athlete') {
+          profileResult = await db.createAthlete(profileData);
+        } else if (userType === 'business') {
+          profileResult = await db.createBusiness(profileData);
+        }
 
-        this.currentUser = authData.user;
-        this.userProfile = profileResult[0];
-        this.isAuthenticated = true;
+        if (profileResult.error) {
+          throw profileResult.error;
+        }
 
-        return { user: authData.user, profile: profileResult[0], error: null };
+        return {
+          user: authData.user,
+          profile: profileResult.data[0],
+          error: null
+        };
       }
 
       return { user: null, profile: null, error: null };
     } catch (error) {
       console.error('Sign up error:', error);
-      return { user: null, profile: null, error };
+      return { user: null, profile: null, error: error.message };
     }
   }
 
@@ -47,25 +49,25 @@ class AuthService {
     try {
       const { data, error } = await auth.signIn(email, password);
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data.user) {
         // Get user profile
-        const { data: profile, error: profileError } = await db.getUser(data.user.id);
+        const profile = await this.getUserProfile(data.user.id);
         
-        if (profileError) throw profileError;
-
-        this.currentUser = data.user;
-        this.userProfile = profile;
-        this.isAuthenticated = true;
-
-        return { user: data.user, profile, error: null };
+        return {
+          user: data.user,
+          profile: profile,
+          error: null
+        };
       }
 
       return { user: null, profile: null, error: null };
     } catch (error) {
       console.error('Sign in error:', error);
-      return { user: null, profile: null, error };
+      return { user: null, profile: null, error: error.message };
     }
   }
 
@@ -74,123 +76,145 @@ class AuthService {
     try {
       const { error } = await auth.signOut();
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      this.currentUser = null;
-      this.userProfile = null;
-      this.isAuthenticated = false;
+      // Clear local storage
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('userProfile');
+      localStorage.removeItem('profileCompleted');
+      localStorage.removeItem('legalDocumentsCompleted');
+      localStorage.removeItem('isNewUser');
 
       return { error: null };
     } catch (error) {
       console.error('Sign out error:', error);
-      return { error };
+      return { error: error.message };
     }
   }
 
   // Get current user
   async getCurrentUser() {
     try {
-      const { user, error } = await auth.getCurrentUser();
+      const { data: { user }, error } = await auth.getCurrentUser();
       
-      if (error) throw error;
-
-      if (user) {
-        // Get user profile
-        const { data: profile, error: profileError } = await db.getUser(user.id);
-        
-        if (profileError) throw profileError;
-
-        this.currentUser = user;
-        this.userProfile = profile;
-        this.isAuthenticated = true;
-
-        return { user, profile, error: null };
+      if (error) {
+        throw error;
       }
 
-      this.currentUser = null;
-      this.userProfile = null;
-      this.isAuthenticated = false;
+      if (user) {
+        const profile = await this.getUserProfile(user.id);
+        return { user, profile, error: null };
+      }
 
       return { user: null, profile: null, error: null };
     } catch (error) {
       console.error('Get current user error:', error);
-      return { user: null, profile: null, error };
+      return { user: null, profile: null, error: error.message };
+    }
+  }
+
+  // Get user profile
+  async getUserProfile(userId) {
+    try {
+      // Try to get athlete profile first
+      let { data: athleteProfile, error: athleteError } = await db.getAthlete(userId);
+      
+      if (athleteProfile && !athleteError) {
+        return { ...athleteProfile, type: 'athlete' };
+      }
+
+      // If not athlete, try business profile
+      let { data: businessProfile, error: businessError } = await db.getBusiness(userId);
+      
+      if (businessProfile && !businessError) {
+        return { ...businessProfile, type: 'business' };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Get user profile error:', error);
+      return null;
     }
   }
 
   // Update user profile
-  async updateProfile(userId, updates) {
+  async updateProfile(userId, userType, updates) {
     try {
-      const { data, error } = await db.updateUser(userId, updates);
+      let result;
       
-      if (error) throw error;
-
-      if (data) {
-        this.userProfile = data[0];
+      if (userType === 'athlete') {
+        result = await db.updateAthlete(userId, updates);
+      } else if (userType === 'business') {
+        result = await db.updateBusiness(userId, updates);
       }
 
-      return { data: data ? data[0] : null, error: null };
+      if (result.error) {
+        throw result.error;
+      }
+
+      return { data: result.data[0], error: null };
     } catch (error) {
       console.error('Update profile error:', error);
-      return { data: null, error };
+      return { data: null, error: error.message };
     }
   }
 
   // Reset password
   async resetPassword(email) {
     try {
-      const { data, error } = await auth.resetPassword(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return { data, error: null };
+      return { error: null };
     } catch (error) {
       console.error('Reset password error:', error);
-      return { data: null, error };
+      return { error: error.message };
     }
   }
 
-  // Check if user is authenticated
-  isUserAuthenticated() {
-    return this.isAuthenticated && this.currentUser !== null;
-  }
+  // Update password
+  async updatePassword(newPassword) {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        throw error;
+      }
 
-  // Get user type
-  getUserType() {
-    return this.userProfile?.user_type || null;
-  }
-
-  // Get user ID
-  getUserId() {
-    return this.currentUser?.id || null;
-  }
-
-  // Check if profile is completed
-  isProfileCompleted() {
-    return this.userProfile?.profile_completed || false;
-  }
-
-  // Check if legal documents are completed
-  areLegalDocumentsCompleted() {
-    return this.userProfile?.legal_documents_completed || false;
+      return { error: null };
+    } catch (error) {
+      console.error('Update password error:', error);
+      return { error: error.message };
+    }
   }
 
   // Listen to auth state changes
   onAuthStateChange(callback) {
-    return auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        this.getCurrentUser().then(({ user, profile }) => {
-          callback({ user, profile, isAuthenticated: true });
-        });
-      } else if (event === 'SIGNED_OUT') {
-        this.currentUser = null;
-        this.userProfile = null;
-        this.isAuthenticated = false;
-        callback({ user: null, profile: null, isAuthenticated: false });
+    return auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const profile = await this.getUserProfile(session.user.id);
+        callback(event, { user: session.user, profile });
+      } else {
+        callback(event, { user: null, profile: null });
       }
+    });
+  }
+
+  // Check if user is authenticated
+  isAuthenticated() {
+    return supabase.auth.getSession().then(({ data: { session } }) => {
+      return !!session;
     });
   }
 }
 
-const authService = new AuthService();
-export default authService; 
+export default new AuthService(); 
