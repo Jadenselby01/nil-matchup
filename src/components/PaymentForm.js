@@ -12,6 +12,23 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState('idle');
   const [paymentMode, setPaymentMode] = useState(''); // 'send' or 'receive'
+  const [stripeAvailable, setStripeAvailable] = useState(false);
+
+  // Check if Stripe is properly configured
+  useEffect(() => {
+    const checkStripeConfig = () => {
+      const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+      if (!publishableKey || publishableKey === 'undefined' || publishableKey.includes('your_')) {
+        setError('Stripe is not configured. Please contact support.');
+        setStripeAvailable(false);
+        return false;
+      }
+      setStripeAvailable(true);
+      return true;
+    };
+
+    checkStripeConfig();
+  }, []);
 
   // Determine payment mode based on user type
   const isBusiness = currentUser && currentUser.type === 'business';
@@ -19,6 +36,11 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
 
   const initializePayment = useCallback(async () => {
     try {
+      if (!stripeAvailable) {
+        setError('Payment system not available. Please contact support.');
+        return;
+      }
+
       setLoading(true);
       setError(null);
       
@@ -45,13 +67,28 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
     } finally {
       setLoading(false);
     }
-  }, [deal, isBusiness, isAthlete, currentUser]);
+  }, [deal, isBusiness, isAthlete, currentUser, stripeAvailable]);
 
   useEffect(() => {
-    if (deal && deal.amount && (isBusiness || isAthlete)) {
+    if (deal && deal.amount && (isBusiness || isAthlete) && stripeAvailable) {
       initializePayment();
     }
-  }, [deal, initializePayment, isBusiness, isAthlete]);
+  }, [deal, initializePayment, isBusiness, isAthlete, stripeAvailable]);
+
+  // Show error if Stripe is not configured
+  if (!stripeAvailable) {
+    return (
+      <div className="payment-error">
+        <div className="error-icon">⚠️</div>
+        <h3>Payment System Unavailable</h3>
+        <p>Stripe payment processing is not configured. Please contact support to enable payments.</p>
+        <div className="error-details">
+          <p><strong>Error:</strong> Missing Stripe configuration</p>
+          <p><strong>Status:</strong> Payment system disabled</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();

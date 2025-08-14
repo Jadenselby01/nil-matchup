@@ -1,13 +1,21 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Check if Stripe is configured
+  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'undefined') {
+    console.error('Stripe secret key not configured');
+    return res.status(500).json({ 
+      error: 'Payment system not configured. Please contact support.',
+      details: 'Missing STRIPE_SECRET_KEY environment variable'
+    });
+  }
+
   try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const { dealId, amount, currency = 'usd', athleteId, businessId } = req.body;
 
     if (!dealId || !amount) {
