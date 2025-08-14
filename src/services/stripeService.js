@@ -10,7 +10,7 @@ export const stripeService = {
   },
 
   // Create payment intent for a deal
-  createPaymentIntent: async (dealId, amount, currency = 'usd') => {
+  createPaymentIntent: async (dealId, amount, currency = 'usd', athleteId, businessId) => {
     try {
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
@@ -21,8 +21,15 @@ export const stripeService = {
           dealId,
           amount: Math.round(amount * 100), // Convert to cents
           currency,
+          athleteId,
+          businessId,
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create payment intent');
+      }
 
       const data = await response.json();
       

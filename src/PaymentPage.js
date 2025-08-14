@@ -12,35 +12,70 @@ function PaymentPage({ currentUser, onBack }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate getting deal data - replace with real API call
-    const mockDeal = {
-      id: 'deal-123',
-      ad_type: 'Social Media Promotion',
-      amount: 1500.00,
-      description: 'Instagram and TikTok posts promoting local business',
-      business: {
-        company_name: 'Local Sports Shop',
-        email: 'contact@localsportsshop.com'
-      },
-      athlete: {
-        name: 'John Smith',
-        sport: 'Basketball'
+    // Get deal from URL params or localStorage, or create a sample deal for testing
+    const getDealData = () => {
+      // Try to get deal from localStorage (if coming from a specific deal)
+      const savedDeal = localStorage.getItem('currentDeal');
+      if (savedDeal) {
+        try {
+          return JSON.parse(savedDeal);
+        } catch (e) {
+          console.log('Could not parse saved deal');
+        }
       }
+
+      // Create a sample deal for testing if no real deal exists
+      return {
+        id: 'deal-' + Date.now(),
+        ad_type: 'Social Media Promotion',
+        amount: 1500.00,
+        description: 'Instagram and TikTok posts promoting local business',
+        business: currentUser?.type === 'business' ? {
+          company_name: currentUser.company_name || 'Your Business',
+          email: currentUser.email || 'business@example.com'
+        } : {
+          company_name: 'Local Sports Shop',
+          email: 'contact@localsportsshop.com'
+        },
+        athlete: currentUser?.type === 'athlete' ? {
+          name: currentUser.name || 'You',
+          sport: currentUser.sport || 'Athlete',
+          email: currentUser.email || 'athlete@example.com'
+        } : {
+          name: 'John Smith',
+          sport: 'Basketball',
+          email: 'john@example.com'
+        }
+      };
     };
 
-    setDeal(mockDeal);
+    const dealData = getDealData();
+    setDeal(dealData);
     setLoading(false);
-  }, []);
+  }, [currentUser]);
 
   const handlePaymentSuccess = (paymentIntent) => {
     console.log('Payment successful:', paymentIntent);
-    // You can redirect to success page or show success message
-    alert('Payment successful! Your deal has been completed.');
+    
+    // Clear any saved deal data
+    localStorage.removeItem('currentDeal');
+    
+    // Show success message
+    if (currentUser?.type === 'business') {
+      alert('✅ Payment successful! Your payment of $' + deal.amount + ' has been sent to the athlete.');
+    } else {
+      alert('✅ Payment information saved! You can now receive payments from businesses.');
+    }
+    
+    // Redirect back to dashboard
+    if (onBack) {
+      onBack();
+    }
   };
 
   const handlePaymentError = (error) => {
     console.error('Payment failed:', error);
-    setError('Payment failed. Please try again.');
+    setError('Payment failed: ' + error.message);
   };
 
   if (loading) {
@@ -58,10 +93,27 @@ function PaymentPage({ currentUser, onBack }) {
     return (
       <div className="payment-page">
         <div className="error-container">
-          <h3>Error</h3>
+          <h3>Payment Error</h3>
           <p>{error}</p>
           <button onClick={() => setError(null)} className="btn-primary">
             Try Again
+          </button>
+          <button onClick={onBack} className="btn-secondary">
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!deal) {
+    return (
+      <div className="payment-page">
+        <div className="error-container">
+          <h3>No Deal Found</h3>
+          <p>Please select a deal to make a payment.</p>
+          <button onClick={onBack} className="btn-primary">
+            Go Back
           </button>
         </div>
       </div>
@@ -93,8 +145,8 @@ function PaymentPage({ currentUser, onBack }) {
         <ul>
           <li>✅ Secure payment processing via Stripe</li>
           <li>✅ Your card information is encrypted</li>
-          <li>✅ Payment will be processed immediately</li>
-          <li>✅ You'll receive a confirmation email</li>
+          <li>✅ {currentUser?.type === 'business' ? 'Payment will be processed immediately' : 'Payment info saved securely'}</li>
+          <li>✅ {currentUser?.type === 'business' ? 'You\'ll receive a confirmation email' : 'You can receive payments from businesses'}</li>
         </ul>
       </div>
     </div>

@@ -28,7 +28,9 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
         const secret = await stripeService.createPaymentIntent(
           deal.id,
           deal.amount,
-          'usd'
+          'usd',
+          deal.athlete?.id || currentUser.id, // athlete ID
+          currentUser.id // business ID
         );
         setClientSecret(secret);
       }
@@ -43,7 +45,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
     } finally {
       setLoading(false);
     }
-  }, [deal, isBusiness, isAthlete]);
+  }, [deal, isBusiness, isAthlete, currentUser]);
 
   useEffect(() => {
     if (deal && deal.amount && (isBusiness || isAthlete)) {
