@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import AuthService from './services/authService';
 import { SecurityProvider } from './contexts/SecurityContext';
@@ -10,6 +10,9 @@ import DocumentSigningPage from './components/DocumentSigningPage';
 import CreateProposalPage from './CreateProposalPage';
 import DealsPage from './DealsPage';
 import Footer from './components/Footer';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { PrivacyPolicy, TermsOfService, CookiePolicy } from './components/LegalPages';
 
 // DropdownMenu Component
 const DropdownMenu = ({ onViewDocuments, onViewPolicies, onViewSettings }) => {
@@ -296,169 +299,81 @@ const CreateOfferPage = ({ onBack }) => (
 );
 
 // OffersPage Component
-const OffersPage = ({ onBack }) => {
-  // Sample business deals with different social media tiers
+const OffersPage = ({ onBack, setCurrentPage }) => {
   const businessDeals = [
     {
       id: 1,
       business: {
-        name: "Local Sports Shop",
-        logo: "https://via.placeholder.com/60x60/4CAF50/white?text=LS",
-        industry: "Retail"
+        name: "TechStart Inc.",
+        industry: "Technology",
+        logo: "https://via.placeholder.com/50x50/007bff/ffffff?text=T"
       },
-      title: "Social Media Campaign",
-      description: "Promote our new athletic gear collection",
+      title: "Social Media Promotion Campaign",
+      description: "Help us promote our new mobile app through your social media presence",
       tiers: [
         {
           type: "Instagram Story",
           price: 150,
-          description: "1 story post featuring our products",
+          description: "One story post featuring our app",
           duration: "24 hours"
         },
         {
           type: "Instagram Post",
           price: 300,
-          description: "1 feed post with caption and hashtags",
-          duration: "Permanent"
+          description: "One feed post with caption and hashtags",
+          duration: "1 week"
         },
         {
           type: "Instagram Reel",
           price: 500,
-          description: "1 creative reel showcasing products",
-          duration: "Permanent"
-        },
-        {
-          type: "Full Campaign",
-          price: 800,
-          description: "Story + Post + Reel package",
-          duration: "1 week"
-        }
-      ],
-      requirements: "Must be active on Instagram with 1000+ followers",
-      targetAudience: "College students, sports enthusiasts"
-    },
-    {
-      id: 2,
-      business: {
-        name: "Fitness First Gym",
-        logo: "https://via.placeholder.com/60x60/2196F3/white?text=FF",
-        industry: "Health & Fitness"
-      },
-      title: "Gym Promotion",
-      description: "Showcase our new workout classes and equipment",
-      tiers: [
-        {
-          type: "Instagram Story",
-          price: 200,
-          description: "1 story showing gym workout",
-          duration: "24 hours"
-        },
-        {
-          type: "Instagram Post",
-          price: 400,
-          description: "1 post with gym tour or workout",
-          duration: "Permanent"
+          description: "One creative reel showcasing app features",
+          duration: "2 weeks"
         },
         {
           type: "TikTok Video",
-          price: 600,
-          description: "1 TikTok workout challenge",
-          duration: "Permanent"
-        },
-        {
-          type: "Full Package",
-          price: 1000,
-          description: "Story + Post + TikTok package",
-          duration: "1 week"
-        }
-      ],
-      requirements: "Must be comfortable with fitness content",
-      targetAudience: "Fitness enthusiasts, students"
-    },
-    {
-      id: 3,
-      business: {
-        name: "Campus Coffee Co.",
-        logo: "https://via.placeholder.com/60x60/795548/white?text=CC",
-        industry: "Food & Beverage"
-      },
-      title: "Coffee Shop Promotion",
-      description: "Promote our new seasonal drinks and study atmosphere",
-      tiers: [
-        {
-          type: "Instagram Story",
-          price: 100,
-          description: "1 story featuring our drinks",
-          duration: "24 hours"
-        },
-        {
-          type: "Instagram Post",
-          price: 250,
-          description: "1 post with coffee and study setup",
-          duration: "Permanent"
-        },
-        {
-          type: "Study Session Content",
           price: 400,
-          description: "Multiple stories during study session",
-          duration: "1 day"
-        },
-        {
-          type: "Complete Package",
-          price: 600,
-          description: "Story + Post + Study session",
+          description: "One TikTok video with trending audio",
           duration: "1 week"
-        }
-      ],
-      requirements: "Must be comfortable with food/drink content",
-      targetAudience: "Students, coffee lovers"
-    },
-    {
-      id: 4,
-      business: {
-        name: "Tech Startup XYZ",
-        logo: "https://via.placeholder.com/60x60/9C27B0/white?text=TS",
-        industry: "Technology"
-      },
-      title: "App Launch Promotion",
-      description: "Help us launch our new student productivity app",
-      tiers: [
-        {
-          type: "Instagram Story",
-          price: 300,
-          description: "1 story about app features",
-          duration: "24 hours"
-        },
-        {
-          type: "Instagram Post",
-          price: 600,
-          description: "1 detailed post about app benefits",
-          duration: "Permanent"
-        },
-        {
-          type: "Video Review",
-          price: 900,
-          description: "1 video review of the app",
-          duration: "Permanent"
-        },
-        {
-          type: "Launch Campaign",
-          price: 1500,
-          description: "Story + Post + Video + ongoing mentions",
-          duration: "2 weeks"
         }
       ],
       requirements: "Must be tech-savvy and active on social media",
       targetAudience: "Students, young professionals"
+    },
+    {
+      id: 2,
+      business: {
+        name: "Local Fitness Center",
+        industry: "Health & Fitness",
+        logo: "https://via.placeholder.com/50x50/28a745/ffffff?text=F"
+      },
+      title: "Fitness Influencer Partnership",
+      description: "Promote our gym and fitness programs to your audience",
+      tiers: [
+        {
+          type: "Gym Tour Video",
+          price: 200,
+          description: "Tour video of our facilities",
+          duration: "1 week"
+        },
+        {
+          type: "Workout Session",
+          price: 350,
+          description: "Record a workout session at our gym",
+          duration: "2 weeks"
+        },
+        {
+          type: "Before/After Story",
+          price: 250,
+          description: "Share your fitness journey with our gym",
+          duration: "1 week"
+        }
+      ],
+      requirements: "Must be fitness-focused and have active followers",
+      targetAudience: "Fitness enthusiasts, students"
     }
   ];
 
-  const [selectedDeal, setSelectedDeal] = useState(null);
-  const [selectedTier, setSelectedTier] = useState(null);
-
   const handleProposeDeal = (deal, tier) => {
-    setSelectedDeal(deal);
-    setSelectedTier(tier);
     // Navigate to create proposal page with deal details
     setCurrentPage('create-proposal');
   };
@@ -981,27 +896,28 @@ function App() {
   // Comprehensive Signup & Profile Creation page component
   const SignupPage = ({ type }) => {
     const [formData, setFormData] = useState({
-      profileImage: null,
       name: '',
       email: '',
       password: '',
-      sport: '',
-      businessType: '',
+      phone: '',
       age: '',
+      sport: '',
       university: '',
       bio: '',
+      businessType: '',
+      industry: '',
+      description: '',
       location: '',
-      businessDescription: '',
-      partnershipType: '',
-      budgetRange: '',
-      additionalRequirements: '',
-      phone: '',
-      instagram: '',
-      twitter: '',
-      tiktok: '',
-      linkedin: '',
-      legalSigned: false
+      website: '',
+      profileImage: null,
+      termsConsent: false,
+      privacyConsent: false,
+      cookieConsent: false
     });
+
+    const [showTerms, setShowTerms] = useState(false);
+    const [showPrivacy, setShowPrivacy] = useState(false);
+    const [showCookies, setShowCookies] = useState(false);
 
     const handleInputChange = (field, value) => {
       setFormData(prev => ({
@@ -1384,19 +1300,69 @@ function App() {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Legal Consent Section */}
+            <div className="form-section">
+              <h3>Legal Agreements</h3>
+              <div className="consent-checkboxes">
+                <div className="consent-item">
+                  <input
+                    type="checkbox"
+                    id="terms-consent"
+                    checked={formData.termsConsent}
+                    onChange={(e) => handleInputChange('termsConsent', e.target.checked)}
+                    required
+                  />
+                  <label htmlFor="terms-consent">
+                    I agree to the <button type="button" className="link-btn" onClick={() => setShowTerms(true)}>Terms of Service</button>
+                  </label>
+                </div>
+                
+                <div className="consent-item">
+                  <input
+                    type="checkbox"
+                    id="privacy-consent"
+                    checked={formData.privacyConsent}
+                    onChange={(e) => handleInputChange('privacyConsent', e.target.checked)}
+                    required
+                  />
+                  <label htmlFor="privacy-consent">
+                    I agree to the <button type="button" className="link-btn" onClick={() => setShowPrivacy(true)}>Privacy Policy</button>
+                  </label>
+                </div>
+                
+                <div className="consent-item">
+                  <input
+                    type="checkbox"
+                    id="cookie-consent"
+                    checked={formData.cookieConsent}
+                    onChange={(e) => handleInputChange('cookieConsent', e.target.checked)}
+                    required
+                  />
+                  <label htmlFor="cookie-consent">
+                    I agree to the <button type="button" className="link-btn" onClick={() => setShowCookies(true)}>Cookie Policy</button>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div className="form-actions">
               <button 
                 type="submit" 
                 className="auth-btn primary-btn complete-btn"
                 disabled={!formData.name || !formData.email || !formData.password || 
                          (type === 'athlete' && !formData.sport) || 
-                         (type === 'business' && !formData.businessType)}
+                         (type === 'business' && !formData.businessType) ||
+                         !formData.termsConsent || !formData.privacyConsent || !formData.cookieConsent}
               >
                 Create Account & Complete Profile
               </button>
             </div>
           </form>
+          
+          {/* Legal Modals */}
+          {showTerms && <TermsOfService onClose={() => setShowTerms(false)} />}
+          {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+          {showCookies && <CookiePolicy onClose={() => setShowCookies(false)} />}
           
           <div className="auth-footer">
             <p>Already have an account? 
@@ -1742,7 +1708,7 @@ function App() {
       case 'create-offer':
         return <CreateOfferPage onBack={() => setCurrentPage('business-dashboard')} />;
       case 'offers':
-        return <OffersPage onBack={() => setCurrentPage('athlete-dashboard')} />;
+        return <OffersPage onBack={() => setCurrentPage('athlete-dashboard')} setCurrentPage={setCurrentPage} />;
 
       case 'deals':
         return <DealsPage 

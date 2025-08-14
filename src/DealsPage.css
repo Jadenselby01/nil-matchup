@@ -51,7 +51,7 @@
 }
 
 .deals-header .subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff !important;
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
@@ -250,6 +250,51 @@
 
 .deals-list::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Fix text visibility - make all text white for better contrast */
+.deals-header .subtitle {
+  color: #ffffff !important;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.deal-item h3 {
+  color: #ffffff !important;
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.deal-item p {
+  color: #ffffff !important;
+  margin: 0 0 6px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.deal-item strong {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.deal-meta {
+  color: #ffffff !important;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.deal-actions button {
+  color: #ffffff !important;
+}
+
+.deal-actions .primary-btn {
+  color: #64ffda !important;
+}
+
+.deal-actions .secondary-btn {
+  color: #ffffff !important;
 }
 
 @media (max-width: 768px) {

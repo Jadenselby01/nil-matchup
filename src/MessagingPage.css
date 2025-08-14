@@ -68,8 +68,8 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.sidebar-header h2 {
-  color: #ffffff;
+.sidebar-header h1 {
+  color: #ffffff !important;
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
@@ -77,7 +77,7 @@
 }
 
 .sidebar-header .subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff !important;
   margin: 0;
   font-size: 0.9rem;
   font-weight: 500;
@@ -124,7 +124,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  color: #ffffff;
+  color: #ffffff !important;
   font-size: 0.9rem;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
@@ -132,7 +132,7 @@
 }
 
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .search-input:focus {
@@ -210,7 +210,7 @@
 }
 
 .conversation-header h3 {
-  color: #ffffff;
+  color: #ffffff !important;
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
@@ -220,7 +220,7 @@
 }
 
 .conversation-time {
-  color: rgba(255, 255, 255, 0.5);
+  color: #ffffff !important;
   font-size: 0.75rem;
   font-weight: 500;
   flex-shrink: 0;
@@ -228,7 +228,7 @@
 }
 
 .conversation-preview {
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff !important;
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.4;
@@ -266,14 +266,14 @@
 }
 
 .chat-participant h3 {
-  color: #ffffff;
+  color: #ffffff !important;
   margin: 0 0 4px 0;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .participant-type {
-  color: rgba(255, 255, 255, 0.6);
+  color: #ffffff !important;
   font-size: 0.8rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -321,7 +321,7 @@
 }
 
 .message-content p {
-  color: #ffffff;
+  color: #ffffff !important;
   margin: 0 0 4px 0;
   font-size: 0.9rem;
   line-height: 1.4;
@@ -329,7 +329,7 @@
 }
 
 .message-time {
-  color: rgba(255, 255, 255, 0.5);
+  color: #ffffff !important;
   font-size: 0.7rem;
   font-weight: 500;
 }
@@ -366,7 +366,7 @@
   flex: 1;
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: #ffffff !important;
   font-size: 0.9rem;
   resize: none;
   outline: none;
@@ -377,7 +377,7 @@
 }
 
 .message-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .send-button {
@@ -434,14 +434,14 @@
 }
 
 .no-conversation-content h3 {
-  color: #ffffff;
+  color: #ffffff !important;
   margin: 0 0 8px 0;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
 .no-conversation-content p {
-  color: rgba(255, 255, 255, 0.6);
+  color: #ffffff !important;
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.5;
@@ -640,7 +640,7 @@
 }
 
 .proposal-header h3 {
-  color: #ffffff;
+  color: #ffffff !important;
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
@@ -678,14 +678,14 @@
 }
 
 .proposal-content p {
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff !important;
   margin: 0 0 6px 0;
   font-size: 0.85rem;
   line-height: 1.4;
 }
 
 .proposal-content strong {
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 600;
 }
 
