@@ -100,10 +100,10 @@ function PaymentPage({ currentUser, onBack }) {
           </button>
           <button onClick={onBack} className="btn-secondary">
             Go Back
-          </button>
-        </div>
+      </button>
       </div>
-    );
+    </div>
+  );
   }
 
   if (!deal) {
@@ -115,9 +115,9 @@ function PaymentPage({ currentUser, onBack }) {
           <button onClick={onBack} className="btn-primary">
             Go Back
           </button>
-        </div>
       </div>
-    );
+    </div>
+  );
   }
 
   return (
@@ -127,9 +127,9 @@ function PaymentPage({ currentUser, onBack }) {
           ← Back
         </button>
         <h2>Complete Payment</h2>
-      </div>
+        </div>
 
-      <div className="payment-content">
+        <div className="payment-content">
         <Elements stripe={stripePromise}>
           <PaymentForm
             deal={deal}
@@ -138,7 +138,7 @@ function PaymentPage({ currentUser, onBack }) {
             onPaymentError={handlePaymentError}
           />
         </Elements>
-      </div>
+        </div>
 
       <div className="payment-info">
         <h4>Payment Information</h4>

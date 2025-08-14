@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import AuthService from './services/authService';
 import { SecurityProvider } from './contexts/SecurityContext';
@@ -10,8 +10,6 @@ import DocumentSigningPage from './components/DocumentSigningPage';
 import CreateProposalPage from './CreateProposalPage';
 import DealsPage from './DealsPage';
 import Footer from './components/Footer';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { PrivacyPolicy, TermsOfService, CookiePolicy } from './components/LegalPages';
 
 // DropdownMenu Component
