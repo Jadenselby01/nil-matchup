@@ -12,54 +12,89 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
 
   const dealTemplates = [
     {
-      id: 'instagram-story',
-      title: 'Instagram Story',
+      id: 'tier1',
+      title: 'Tier 1 - $100-$250',
+      icon: '📱',
+      description: 'Low-effort, single-platform post',
+      defaultBudget: 175,
+      deliverables: 'Single platform post (Instagram feed, Story, TikTok under 30s, X post)',
+      platform: 'single',
+      duration: '7',
+      scope: 'Low-effort, single-platform post',
+      examples: [
+        '1 Instagram feed post (single image or simple caption)',
+        '1 Instagram Story with swipe-up link',
+        '1 TikTok under 30 seconds',
+        '1 static post on X (Twitter)'
+      ]
+    },
+    {
+      id: 'tier2',
+      title: 'Tier 2 - $250-$500',
       icon: '📸',
-      description: 'Quick story post with brand tag',
-      defaultBudget: 100,
-      deliverables: '1x Instagram Story tagging @brand within 7 days',
-      platform: 'instagram',
-      duration: '7'
+      description: 'Multi-post package or higher-effort single deliverable',
+      defaultBudget: 375,
+      deliverables: 'Multi-post package or higher-effort content',
+      platform: 'multi',
+      duration: '14',
+      scope: 'Multi-post package or higher-effort single deliverable',
+      examples: [
+        '1 Instagram feed post + 1 Story',
+        'TikTok with custom script or outfit',
+        'Carousel post (3–5 images) highlighting product/event',
+        'Short video (15–30 sec) on both TikTok & Instagram Reels'
+      ]
     },
     {
-      id: 'instagram-post',
-      title: 'Instagram Post',
-      icon: 'Instagram',
-      description: 'Feed post with brand integration',
-      defaultBudget: 200,
-      deliverables: '1x Instagram Post with brand integration within 7 days',
-      platform: 'instagram',
-      duration: '7'
+      id: 'tier3',
+      title: 'Tier 3 - $500-$1,000',
+      icon: '🎬',
+      description: 'Multi-platform content & custom engagement',
+      defaultBudget: 750,
+      deliverables: 'Multi-platform content with custom engagement',
+      platform: 'multi-platform',
+      duration: '21',
+      scope: 'Multi-platform content & custom engagement',
+      examples: [
+        '1 TikTok + 1 Instagram Reel + 1 Story',
+        'Behind-the-scenes vlog promoting brand',
+        'Unboxing video with brand tags',
+        'Athlete appears at a local event and posts about it before/during'
+      ]
     },
     {
-      id: 'tiktok-video',
-      title: 'TikTok Video',
-      icon: 'TikTok',
-      description: 'Short video content',
-      defaultBudget: 300,
-      deliverables: '1x TikTok video featuring brand within 7 days',
-      platform: 'tiktok',
-      duration: '7'
+      id: 'tier4',
+      title: 'Tier 4 - $1,000-$2,500',
+      icon: '🌟',
+      description: 'Ongoing campaign or exclusive promo period',
+      defaultBudget: 1750,
+      deliverables: 'Ongoing campaign or exclusive promotion',
+      platform: 'campaign',
+      duration: '30',
+      scope: 'Ongoing campaign or exclusive promo period',
+      examples: [
+        '3–5 posts over a month across Instagram, TikTok, and X',
+        'Exclusive product ambassador role (no competing sponsors in category)',
+        'Giveaway contest hosted on athlete\'s page',
+        'Live Q&A or livestream event with brand feature'
+      ]
     },
     {
-      id: 'facebook-post',
-      title: 'Facebook Post',
-      icon: '📘',
-      description: 'Facebook page post',
-      defaultBudget: 150,
-      deliverables: '1x Facebook post about brand within 7 days',
-      platform: 'facebook',
-      duration: '7'
-    },
-    {
-      id: 'twitter-post',
-      title: 'Twitter Post',
-      icon: 'Twitter',
-      description: 'Twitter/X post',
-      defaultBudget: 75,
-      deliverables: '1x Twitter post mentioning brand within 7 days',
-      platform: 'twitter',
-      duration: '7'
+      id: 'tier5',
+      title: 'Tier 5 - $2,500+',
+      icon: '💎',
+      description: 'Full sponsorship package',
+      defaultBudget: 3000,
+      deliverables: 'Full sponsorship package with ongoing content',
+      platform: 'sponsorship',
+      duration: '60',
+      scope: 'Full sponsorship package',
+      examples: [
+        'Monthly or semester-long ambassadorship',
+        'Branded content series (weekly videos/posts)',
+        'Full-day appearance & content creation for the brand',
+        'Athlete featured in brand\'s own ads with cross-posting'
+      ]
     },
     {
       id: 'custom',
@@ -69,8 +104,23 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
       defaultBudget: 0,
       deliverables: '',
       platform: 'custom',
-      duration: '7'
+      duration: '7',
+      scope: 'Custom requirements and deliverables',
+      examples: ['Define your own scope and requirements']
     }
+  ];
+
+  const socialMediaTypes = [
+    'Instagram Feed Post',
+    'Instagram Story',
+    'Instagram Reel',
+    'TikTok Video',
+    'X (Twitter) Post',
+    'YouTube Short/Video',
+    'Livestream/Live Appearance',
+    'Giveaway Collaboration',
+    'Event Promotion',
+    'Product Unboxing'
   ];
 
   const handleTemplateSelect = (template) => {
@@ -95,11 +145,13 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
 
     const dealData = {
       title: selectedTemplate.title,
-      deliverables: customDetails.customDeliverables,
+      deliverables: customDetails.customDeliverables || selectedTemplate.deliverables,
       paymentAmount: parseInt(customDetails.budget),
       platform: customDetails.platform,
       duration: customDetails.duration,
-      deadline: new Date(Date.now() + parseInt(customDetails.duration) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      deadline: new Date(Date.now() + parseInt(customDetails.duration) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      scope: selectedTemplate.scope,
+      examples: selectedTemplate.examples
     };
 
     onDealCreate(dealData);
@@ -111,7 +163,7 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
     }
     
     if (selectedTemplate) {
-      return selectedTemplate.deliverables.replace('@brand', '@yourbrand');
+      return selectedTemplate.deliverables;
     }
     
     return '';
@@ -121,8 +173,8 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
     <div className="templates-overlay">
       <div className="templates-modal">
         <div className="templates-header">
-          <h2>🚀 Quick Deal Setup</h2>
-          <p>Choose a template or create a custom deal</p>
+          <h2>🚀 Smart Deal Templates</h2>
+          <p>Choose from our tiered pricing structure or create a custom deal</p>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -140,6 +192,9 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
                 <div className="template-budget">
                   ${template.defaultBudget}
                 </div>
+                <div className="template-scope">
+                  <strong>Scope:</strong> {template.scope}
+                </div>
               </div>
             ))}
           </div>
@@ -147,6 +202,32 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
           {selectedTemplate && (
             <div className="deal-customization">
               <h3>Customize Your Deal</h3>
+              
+              <div className="template-details">
+                <div className="detail-section">
+                  <h4>Scope & Examples</h4>
+                  <div className="scope-info">
+                    <p><strong>Scope:</strong> {selectedTemplate.scope}</p>
+                    <div className="examples-list">
+                      <strong>Examples:</strong>
+                      <ul>
+                        {selectedTemplate.examples.map((example, index) => (
+                          <li key={index}>{example}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="social-media-types">
+                  <h4>Common Social Media Promotion Types</h4>
+                  <div className="types-grid">
+                    {socialMediaTypes.map((type, index) => (
+                      <span key={index} className="type-tag">{type}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
               
               <div className="customization-form">
                 <div className="form-row">
@@ -170,7 +251,9 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
                       <option value="3">3 days</option>
                       <option value="7">7 days</option>
                       <option value="14">14 days</option>
+                      <option value="21">21 days</option>
                       <option value="30">30 days</option>
+                      <option value="60">60 days</option>
                     </select>
                   </div>
                 </div>

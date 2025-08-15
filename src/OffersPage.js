@@ -1,224 +1,277 @@
 import React, { useState } from 'react';
 import './OffersPage.css';
 
-function OffersPage({ onBack }) {
-  const [selectedOffer, setSelectedOffer] = useState(null);
+const OffersPage = ({ setCurrentPage }) => {
+  const [selectedDeal, setSelectedDeal] = useState(null);
+  const [selectedTier, setSelectedTier] = useState(null);
 
-  // Sample offers data - this would come from Supabase
-  const [offers] = useState([
+  const businessDeals = [
     {
       id: 1,
-      businessName: "Carolina Sports Bar & Grill",
-      businessImage: "https://via.placeholder.com/200x200/6f42c1/ffffff?text=CSB",
-      campaignDescription: "We're launching our new game day menu and want athletes to help us promote it! Perfect opportunity for sports enthusiasts to connect with fans.",
-      adTypes: {
-        instagramFeed: { price: 250 },
-        instagramStory: { price: 150 },
-        instagramReel: { price: 400 },
-        discountCode: { price: 100 }
+      business: {
+        name: 'Sports Gear Co.',
+        logo: '🏃‍♂️',
+        industry: 'Sports Equipment'
       },
-      totalValue: 900,
-      createdAt: "2024-01-15T10:30:00Z"
+      title: 'Social Media Promotion Campaign',
+      description: 'Looking for college athletes to promote our new line of performance gear through authentic social media content.',
+      category: 'Social Media',
+      requirements: 'Must be active on Instagram/TikTok, authentic content style, engagement with followers',
+      targetAudience: 'College students, Sports fans, Fitness enthusiasts',
+      tiers: [
+        {
+          id: 'tier1',
+          name: 'Tier 1 - $100-$250',
+          price: '$100-$250',
+          description: 'Low-effort, single-platform post',
+          scope: 'Low-effort, single-platform post',
+          examples: [
+            '1 Instagram feed post (single image or simple caption)',
+            '1 Instagram Story with swipe-up link',
+            '1 TikTok under 30 seconds',
+            '1 static post on X (Twitter)'
+          ],
+          deliverables: 'Single platform post with brand integration',
+          duration: '7 days'
+        },
+        {
+          id: 'tier2',
+          name: 'Tier 2 - $250-$500',
+          price: '$250-$500',
+          description: 'Multi-post package or higher-effort single deliverable',
+          scope: 'Multi-post package or higher-effort single deliverable',
+          examples: [
+            '1 Instagram feed post + 1 Story',
+            'TikTok with custom script or outfit',
+            'Carousel post (3–5 images) highlighting product/event',
+            'Short video (15–30 sec) on both TikTok & Instagram Reels'
+          ],
+          deliverables: 'Multi-post package or higher-effort content',
+          duration: '14 days'
+        },
+        {
+          id: 'tier3',
+          name: 'Tier 3 - $500-$1,000',
+          price: '$500-$1,000',
+          description: 'Multi-platform content & custom engagement',
+          scope: 'Multi-platform content & custom engagement',
+          examples: [
+            '1 TikTok + 1 Instagram Reel + 1 Story',
+            'Behind-the-scenes vlog promoting brand',
+            'Unboxing video with brand tags',
+            'Athlete appears at a local event and posts about it before/during'
+          ],
+          deliverables: 'Multi-platform content with custom engagement',
+          duration: '21 days'
+        },
+        {
+          id: 'tier4',
+          name: 'Tier 4 - $1,000-$2,500',
+          price: '$1,000-$2,500',
+          description: 'Ongoing campaign or exclusive promo period',
+          scope: 'Ongoing campaign or exclusive promo period',
+          examples: [
+            '3–5 posts over a month across Instagram, TikTok, and X',
+            'Exclusive product ambassador role (no competing sponsors in category)',
+            'Giveaway contest hosted on athlete\'s page',
+            'Live Q&A or livestream event with brand feature'
+          ],
+          deliverables: 'Ongoing campaign or exclusive promotion',
+          duration: '30 days'
+        },
+        {
+          id: 'tier5',
+          name: 'Tier 5 - $2,500+',
+          price: '$2,500+',
+          description: 'Full sponsorship package',
+          scope: 'Full sponsorship package',
+          examples: [
+            'Monthly or semester-long ambassadorship',
+            'Branded content series (weekly videos/posts)',
+            'Full-day appearance & content creation for the brand',
+            'Athlete featured in brand\'s own ads with cross-posting'
+          ],
+          deliverables: 'Full sponsorship package with ongoing content',
+          duration: '60 days'
+        }
+      ]
     },
     {
       id: 2,
-      businessName: "Elite Fitness Center",
-      businessImage: "https://via.placeholder.com/200x200/20c997/ffffff?text=EFC",
-      campaignDescription: "Looking for athletes to showcase our new HIIT training program and premium equipment. Great for fitness-focused content creators.",
-      adTypes: {
-        instagramFeed: { price: 300 },
-        instagramStory: { price: 200 },
-        instagramReel: { price: 500 },
-        tiktokVideo: { price: 400 },
-        youtubeReview: { price: 800 }
+      business: {
+        name: 'Fitness App',
+        logo: '💪',
+        industry: 'Technology'
       },
-      totalValue: 2200,
-      createdAt: "2024-01-14T14:20:00Z"
-    },
-    {
-      id: 3,
-      businessName: "University Auto Service",
-      businessImage: "https://via.placeholder.com/200x200/fd7e14/ffffff?text=UAS",
-      campaignDescription: "Promote our student discount program! We offer 20% off for all university students. Simple social media promotion needed.",
-      adTypes: {
-        instagramFeed: { price: 150 },
-        instagramStory: { price: 75 },
-        discountCode: { price: 50 }
-      },
-      totalValue: 275,
-      createdAt: "2024-01-13T09:15:00Z"
-    },
-    {
-      id: 4,
-      businessName: "Campus Real Estate Group",
-      businessImage: "https://via.placeholder.com/200x200/e83e8c/ffffff?text=CRE",
-      campaignDescription: "Help us showcase student housing options near campus. We need authentic content about campus life and housing experiences.",
-      adTypes: {
-        instagramFeed: { price: 400 },
-        instagramReel: { price: 600 },
-        tiktokVideo: { price: 500 },
-        youtubeReview: { price: 1000 },
-        meetGreet: { price: 300 }
-      },
-      totalValue: 2800,
-      createdAt: "2024-01-12T16:45:00Z"
+      title: 'Workout Challenge Promotion',
+      description: 'Seeking athletes to promote our 30-day fitness challenge app through social media and personal testimonials.',
+      category: 'Fitness',
+      requirements: 'Athletes must complete the challenge, share progress, engage with community',
+      targetAudience: 'Fitness enthusiasts, College students, Young professionals',
+      tiers: [
+        {
+          id: 'tier1',
+          name: 'Tier 1 - $100-$250',
+          price: '$100-$250',
+          description: 'Low-effort, single-platform post',
+          scope: 'Low-effort, single-platform post',
+          examples: [
+            '1 Instagram feed post (single image or simple caption)',
+            '1 Instagram Story with swipe-up link',
+            '1 TikTok under 30 seconds',
+            '1 static post on X (Twitter)'
+          ],
+          deliverables: 'Single platform post with brand integration',
+          duration: '7 days'
+        },
+        {
+          id: 'tier2',
+          name: 'Tier 2 - $250-$500',
+          price: '$250-$500',
+          description: 'Multi-post package or higher-effort single deliverable',
+          scope: 'Multi-post package or higher-effort single deliverable',
+          examples: [
+            '1 Instagram feed post + 1 Story',
+            'TikTok with custom script or outfit',
+            'Carousel post (3–5 images) highlighting product/event',
+            'Short video (15–30 sec) on both TikTok & Instagram Reels'
+          ],
+          deliverables: 'Multi-post package or higher-effort content',
+          duration: '14 days'
+        },
+        {
+          id: 'tier3',
+          name: 'Tier 3 - $500-$1,000',
+          price: '$500-$1,000',
+          description: 'Multi-platform content & custom engagement',
+          scope: 'Multi-platform content & custom engagement',
+          examples: [
+            '1 TikTok + 1 Instagram Reel + 1 Story',
+            'Behind-the-scenes vlog promoting brand',
+            'Unboxing video with brand tags',
+            'Athlete appears at a local event and posts about it before/during'
+          ],
+          deliverables: 'Multi-platform content with custom engagement',
+          duration: '21 days'
+        }
+      ]
     }
-  ]);
+  ];
 
-  const handleSendProposal = (offerId) => {
-    // Navigate to create proposal page with offer data
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
-      // Store offer data for the create proposal page
-      localStorage.setItem('selectedOffer', JSON.stringify(offer));
-      // Navigate to create proposal page
-      window.location.href = '/create-proposal';
-    }
+  const handleProposeDeal = (deal, tier) => {
+    setSelectedDeal(deal);
+    setSelectedTier(tier);
+    // Navigate to create proposal page
+    setCurrentPage('create-proposal');
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const adTypeConfig = {
-    instagramFeed: { name: "Instagram Feed Post", icon: "Instagram" },
-    instagramStory: { name: "Instagram Story", icon: "Story" },
-    instagramHighlight: { name: "Instagram Highlight", icon: "Highlight" },
-    instagramReel: { name: "Instagram Reel", icon: "Reel" },
-    instagramCollab: { name: "Instagram Collab", icon: "Collab" },
-    tiktokVideo: { name: "TikTok Video", icon: "TikTok" },
-    tiktokDuet: { name: "TikTok Duet", icon: "Duet" },
-    youtubeMention: { name: "YouTube Mention", icon: "YouTube" },
-    youtubeReview: { name: "YouTube Review", icon: "Review" },
-    discountCode: { name: "Discount Code", icon: "Discount" },
-    meetGreet: { name: "Meet & Greet", icon: "Event" }
-  };
+  const socialMediaTypes = [
+    'Instagram Feed Post',
+    'Instagram Story', 
+    'Instagram Reel',
+    'TikTok Video',
+    'X (Twitter) Post',
+    'YouTube Short/Video',
+    'Livestream/Live Appearance',
+    'Giveaway Collaboration',
+    'Event Promotion',
+    'Product Unboxing'
+  ];
 
   return (
     <div className="offers-page">
-      <div className="offers-content">
-        <button 
-          className="back-btn"
-          onClick={onBack}
-        >
-          ← Back to Dashboard
-        </button>
-        
-        <h1 className="offers-title">Available NIL Offers</h1>
-        <p className="offers-subtitle">Browse and apply to opportunities from local businesses</p>
-        
-        <div className="offers-grid">
-          {offers.map(offer => (
-            <div 
-              key={offer.id} 
-              className="offer-card"
-              onClick={() => setSelectedOffer(offer)}
-            >
-              <div className="offer-header">
-                <img src={offer.businessImage} alt={offer.businessName} />
-                <div className="offer-info">
-                  <h3>{offer.businessName}</h3>
-                  <p className="offer-date">Posted {formatDate(offer.createdAt)}</p>
-                </div>
-                <div className="offer-value">
-                  <span className="value-amount">${offer.totalValue}</span>
-                  <span className="value-label">Total Value</span>
-                </div>
+      <div className="offers-header">
+        <h1>NIL Opportunities</h1>
+        <p>Discover deals from businesses looking for athletes like you</p>
+      </div>
+
+      <div className="deals-grid">
+        {businessDeals.map((deal) => (
+          <div key={deal.id} className="deal-card">
+            <div className="business-info">
+              <div className="business-logo">{deal.business.logo}</div>
+              <div className="business-details">
+                <h3>{deal.business.name}</h3>
+                <span className="industry">{deal.business.industry}</span>
               </div>
+            </div>
+
+            <div className="deal-content">
+              <h2>{deal.title}</h2>
+              <p className="description">{deal.description}</p>
               
-              <p className="offer-description">{offer.campaignDescription}</p>
-              
-              <div className="offer-ad-types">
-                <h4>Included Ad Types:</h4>
-                <div className="ad-types-list">
-                  {Object.entries(offer.adTypes).map(([key, adType]) => (
-                    <div key={key} className="ad-type-item">
-                      <span className="ad-type-icon">{adTypeConfig[key]?.icon}</span>
-                      <span className="ad-type-name">{adTypeConfig[key]?.name}</span>
-                      <span className="ad-type-price">${adType.price}</span>
+              <div className="deal-meta">
+                <span className="category">{deal.category}</span>
+                <span className="requirements">Requirements: {deal.requirements}</span>
+                <span className="target-audience">Target: {deal.targetAudience}</span>
+              </div>
+
+              <div className="pricing-tiers">
+                <h3>Pricing Tiers</h3>
+                {deal.tiers.map((tier) => (
+                  <div key={tier.id} className="tier-card">
+                    <div className="tier-header">
+                      <h4>{tier.name}</h4>
+                      <span className="tier-price">{tier.price}</span>
                     </div>
-                  ))}
-                </div>
+                    
+                    <div className="tier-details">
+                      <p className="tier-description">{tier.description}</p>
+                      
+                      <div className="tier-scope">
+                        <strong>Scope:</strong> {tier.scope}
+                      </div>
+                      
+                      <div className="tier-examples">
+                        <strong>Examples:</strong>
+                        <ul>
+                          {tier.examples.map((example, index) => (
+                            <li key={index}>{example}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="tier-deliverables">
+                        <strong>Deliverables:</strong> {tier.deliverables}
+                      </div>
+                      
+                      <div className="tier-duration">
+                        <strong>Duration:</strong> {tier.duration}
+                      </div>
+                    </div>
+                    
+                    <button 
+                      className="propose-btn"
+                      onClick={() => handleProposeDeal(deal, tier)}
+                    >
+                      Propose Deal - {tier.price}
+                    </button>
+                  </div>
+                ))}
               </div>
-              
-              <button 
-                className="view-details-btn secondary-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedOffer(offer);
-                }}
-              >
-                View Details
-              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="social-media-guide">
+        <h2>Common Social Media Promotion Types in NIL</h2>
+        <div className="types-grid">
+          {socialMediaTypes.map((type, index) => (
+            <div key={index} className="type-card">
+              <span>{type}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Offer Detail Modal */}
-      {selectedOffer && (
-        <div className="modal-backdrop" onClick={() => setSelectedOffer(null)}>
-          <div className="offer-modal" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setSelectedOffer(null)}>×</button>
-            
-            <div className="modal-header">
-              <img src={selectedOffer.businessImage} alt={selectedOffer.businessName} />
-              <div>
-                <h2>{selectedOffer.businessName}</h2>
-                <p className="modal-date">Posted {formatDate(selectedOffer.createdAt)}</p>
-              </div>
-            </div>
-            
-            <div className="modal-content">
-              <div className="campaign-section">
-                <h3>Campaign Description</h3>
-                <p>{selectedOffer.campaignDescription}</p>
-              </div>
-              
-              <div className="ad-types-section">
-                <h3>Ad Types & Pricing</h3>
-                <div className="ad-types-grid">
-                  {Object.entries(selectedOffer.adTypes).map(([key, adType]) => (
-                    <div key={key} className="ad-type-detail">
-                      <div className="ad-type-header">
-                        <span className="ad-type-icon">{adTypeConfig[key]?.icon}</span>
-                        <span className="ad-type-name">{adTypeConfig[key]?.name}</span>
-                      </div>
-                      <div className="ad-type-price">${adType.price}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="total-section">
-                <div className="total-card">
-                  <h3>Total Deal Value</h3>
-                  <div className="total-amount">
-                    <span className="currency">$</span>
-                    <span className="amount">{selectedOffer.totalValue}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-actions">
-              <button 
-                className="send-proposal-btn primary-btn"
-                onClick={() => handleSendProposal(selectedOffer.id)}
-              >
-                Send Proposal
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="back-to-dashboard">
+        <button onClick={() => setCurrentPage('dashboard')}>
+          Back to Dashboard
+        </button>
+      </div>
     </div>
   );
-}
+};
 
 export default OffersPage; 
