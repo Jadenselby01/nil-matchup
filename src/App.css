@@ -1496,113 +1496,181 @@
   }
 } 
 
-/* Smart Template Modal Styles */
+/* Smart Template Modal - Black Text on White Background */
 .smart-template-modal {
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  color: #333;
+  background: #ffffff;
+  color: #000000 !important;
 }
 
-.modal-subtitle {
-  color: #666;
-  margin-bottom: 20px;
-  font-size: 14px;
+.smart-template-modal h2 {
+  color: #000000 !important;
 }
 
-.smart-template-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  color: #333;
+.smart-template-modal h3 {
+  color: #000000 !important;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
+.smart-template-modal label {
+  color: #000000 !important;
   font-weight: 600;
-  color: #333;
+}
+
+.smart-template-modal input[type="text"],
+.smart-template-modal input[type="email"],
+.smart-template-modal select,
+.smart-template-modal textarea {
+  color: #000000 !important;
+  background: #ffffff;
+  border: 2px solid #007bff;
+}
+
+.smart-template-modal input[type="text"]::placeholder,
+.smart-template-modal input[type="email"]::placeholder,
+.smart-template-modal textarea::placeholder {
+  color: #666666 !important;
+}
+
+.smart-template-modal .form-group {
+  margin-bottom: 20px;
+}
+
+.smart-template-modal .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #000000 !important;
+  font-weight: 600;
   font-size: 14px;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.smart-template-modal .form-group input,
+.smart-template-modal .form-group select,
+.smart-template-modal .form-group textarea {
+  width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
   font-size: 14px;
-  transition: border-color 0.3s ease;
-  color: #333;
-  background: white;
+  color: #000000 !important;
+  background: #ffffff;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.smart-template-modal .form-group input:focus,
+.smart-template-modal .form-group select:focus,
+.smart-template-modal .form-group textarea:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
-  color: #333;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-  color: #999;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
+/* Smart Template Buttons */
+.smart-template-modal .btn-primary {
+  background: #007bff;
+  color: #ffffff !important;
   border: none;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: 6px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+.smart-template-modal .btn-primary:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
 }
 
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #f8f9fa;
-  color: #333;
-  border: 1px solid #ddd;
+.smart-template-modal .btn-secondary {
+  background: #6c757d;
+  color: #ffffff !important;
+  border: none;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: 6px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-left: 10px;
 }
 
-.btn-secondary:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
+.smart-template-modal .btn-secondary:hover {
+  background: #545b62;
+  transform: translateY(-1px);
+}
+
+/* Business Messages - White Text */
+.business-message {
+  color: #ffffff !important;
+}
+
+.business-message h3 {
+  color: #ffffff !important;
+}
+
+.business-message p {
+  color: #ffffff !important;
+}
+
+.business-message label {
+  color: #ffffff !important;
+}
+
+.business-message input {
+  color: #000000 !important;
+  background: #ffffff;
+}
+
+.business-message textarea {
+  color: #000000 !important;
+  background: #ffffff;
+}
+
+/* Business Dashboard Text - White */
+.business-dashboard h1 {
+  color: #ffffff !important;
+}
+
+.business-dashboard h2 {
+  color: #ffffff !important;
+}
+
+.business-dashboard h3 {
+  color: #ffffff !important;
+}
+
+.business-dashboard p {
+  color: #ffffff !important;
+}
+
+.business-dashboard label {
+  color: #ffffff !important;
+}
+
+/* Business Smart Template Section */
+.business-smart-template h3 {
+  color: #ffffff !important;
+}
+
+.business-smart-template p {
+  color: #ffffff !important;
+}
+
+.business-smart-template label {
+  color: #ffffff !important;
+}
+
+/* Business Form Elements */
+.business-form input,
+.business-form select,
+.business-form textarea {
+  color: #000000 !important;
+  background: #ffffff;
+  border: 2px solid #007bff;
+}
+
+.business-form input::placeholder,
+.business-form textarea::placeholder {
+  color: #666666 !important;
 }
 
 /* Modal Styles */
