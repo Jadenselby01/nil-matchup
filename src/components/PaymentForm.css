@@ -7,6 +7,10 @@
   color: #000000 !important;
 }
 
+.athlete-payment-setup h4 {
+  color: #000000 !important;
+}
+
 .athlete-payment-setup p {
   color: #000000 !important;
 }
@@ -35,6 +39,19 @@
   color: #000000 !important;
 }
 
+/* Payment Header */
+.payment-header {
+  color: #000000 !important;
+}
+
+.payment-header h3 {
+  color: #000000 !important;
+}
+
+.payment-header p {
+  color: #000000 !important;
+}
+
 /* Payment Form Container */
 .payment-form-container {
   background: #ffffff;
@@ -42,6 +59,10 @@
 }
 
 .payment-form-container h3 {
+  color: #000000 !important;
+}
+
+.payment-form-container h4 {
   color: #000000 !important;
 }
 
@@ -71,6 +92,27 @@
 }
 
 .deal-summary .deal-business {
+  color: #000000 !important;
+}
+
+/* Payment Notice */
+.payment-notice {
+  color: #000000 !important;
+}
+
+.payment-notice h4 {
+  color: #000000 !important;
+}
+
+.payment-notice p {
+  color: #000000 !important;
+}
+
+.payment-notice .secure-info {
+  color: #000000 !important;
+}
+
+.payment-notice .stripe-powered {
   color: #000000 !important;
 }
 
@@ -164,4 +206,13 @@
   opacity: 0.8;
   margin-top: 20px;
   text-align: center;
+}
+
+/* Force all text to be black in athlete payment setup */
+.athlete-payment-setup * {
+  color: #000000 !important;
+}
+
+.athlete-payment-setup button {
+  color: #ffffff !important;
 } 
