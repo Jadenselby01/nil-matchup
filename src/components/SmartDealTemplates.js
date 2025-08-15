@@ -95,18 +95,6 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
         'Full-day appearance & content creation for the brand',
         'Athlete featured in brand\'s own ads with cross-posting'
       ]
-    },
-    {
-      id: 'custom',
-      title: 'Custom Deal',
-      icon: '⚙️',
-      description: 'Create your own deal terms',
-      defaultBudget: 0,
-      deliverables: '',
-      platform: 'custom',
-      duration: '7',
-      scope: 'Custom requirements and deliverables',
-      examples: ['Define your own scope and requirements']
     }
   ];
 
@@ -158,14 +146,9 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
   };
 
   const getPreviewDeliverables = () => {
-    if (selectedTemplate?.id === 'custom') {
-      return customDetails.customDeliverables;
-    }
-    
     if (selectedTemplate) {
       return selectedTemplate.deliverables;
     }
-    
     return '';
   };
 
@@ -174,34 +157,36 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
       <div className="templates-modal">
         <div className="templates-header">
           <h2>🚀 Smart Deal Templates</h2>
-          <p>Choose from our tiered pricing structure or create a custom deal</p>
+          <p>Choose from our tiered pricing structure to create your deal</p>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
         <div className="templates-content">
-          <div className="templates-grid">
-            {dealTemplates.map(template => (
-              <div
-                key={template.id}
-                className={`template-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
-                onClick={() => handleTemplateSelect(template)}
+          <div className="template-selection">
+            <div className="form-group">
+              <label htmlFor="templateSelect">Select Pricing Tier *</label>
+              <select
+                id="templateSelect"
+                value={selectedTemplate?.id || ''}
+                onChange={(e) => {
+                  const template = dealTemplates.find(t => t.id === e.target.value);
+                  handleTemplateSelect(template);
+                }}
+                required
               >
-                <div className="template-icon">{template.icon}</div>
-                <h3>{template.title}</h3>
-                <p>{template.description}</p>
-                <div className="template-budget">
-                  ${template.defaultBudget}
-                </div>
-                <div className="template-scope">
-                  <strong>Scope:</strong> {template.scope}
-                </div>
-              </div>
-            ))}
+                <option value="">Choose a pricing tier...</option>
+                {dealTemplates.map(template => (
+                  <option key={template.id} value={template.id}>
+                    {template.title} - {template.description}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {selectedTemplate && (
             <div className="deal-customization">
-              <h3>Customize Your Deal</h3>
+              <h3>Deal Details</h3>
               
               <div className="template-details">
                 <div className="detail-section">
@@ -257,18 +242,6 @@ const SmartDealTemplates = ({ userType, onDealCreate, onClose }) => {
                     </select>
                   </div>
                 </div>
-
-                {selectedTemplate.id === 'custom' && (
-                  <div className="form-group">
-                    <label>Deliverables</label>
-                    <textarea
-                      value={customDetails.customDeliverables}
-                      onChange={(e) => handleInputChange('customDeliverables', e.target.value)}
-                      placeholder="Describe what the athlete needs to do..."
-                      rows="3"
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="deal-preview">

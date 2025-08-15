@@ -75,21 +75,6 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
     }
   }, [deal, initializePayment, isBusiness, isAthlete, stripeAvailable]);
 
-  // Show error if Stripe is not configured
-  if (!stripeAvailable) {
-    return (
-      <div className="payment-error">
-        <div className="error-icon">⚠️</div>
-        <h3>Payment System Unavailable</h3>
-        <p>Stripe payment processing is not configured. Please contact support to enable payments.</p>
-        <div className="error-details">
-          <p><strong>Error:</strong> Missing Stripe configuration</p>
-          <p><strong>Status:</strong> Payment system disabled</p>
-        </div>
-      </div>
-    );
-  }
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -182,6 +167,74 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
       setLoading(false);
     }
   };
+
+  // Show error if Stripe is not configured
+  if (!stripeAvailable) {
+    return (
+      <div className="payment-error">
+        <h4>⚠️ Stripe Not Configured</h4>
+        <p>Payment processing is not available. Please contact support.</p>
+      </div>
+    );
+  }
+
+  if (paymentMode === 'athlete-receive-mode') {
+    return (
+      <div className="athlete-payment-setup">
+        <div className="payment-form-container">
+          <div className="payment-header">
+            <h3>Set Up Payment Info</h3>
+            <p>💳 Athlete Setup: You are setting up payment info to receive money</p>
+          </div>
+
+          <div className="deal-summary">
+            <h4>Deal: {deal.title}</h4>
+            <p className="deal-amount">Amount: ${deal.amount}</p>
+            <p className="deal-business">Business: {deal.business.name}</p>
+          </div>
+
+          <div className="payment-notice">
+            <h4>Credit or Debit Card (to receive payments)</h4>
+            <p>✅ Your card info is saved securely for receiving payments</p>
+            <p className="secure-info">🔒 Your payment information is secure and encrypted</p>
+            <p className="stripe-powered">Powered by Stripe</p>
+          </div>
+
+          <div className="payment-form">
+            <div className="form-group">
+              <label>Card Information</label>
+              <div className="card-element-container">
+                <CardElement
+                  options={{
+                    style: {
+                      base: {
+                        fontSize: '16px',
+                        color: '#000000',
+                        '::placeholder': {
+                          color: '#666666',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn-save-payment"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? 'Saving...' : 'Save Payment Info'}
+            </button>
+          </div>
+
+          {/* The success and error states were not part of the new_code, so they are removed. */}
+        </div>
+      </div>
+    );
+  }
 
   const cardElementOptions = {
     style: {

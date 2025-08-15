@@ -2293,3 +2293,78 @@
   border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
 } 
+
+/* Signup Page Legal Agreement Text Colors */
+.legal-agreements h3 {
+  color: #000000 !important;
+}
+
+.legal-agreements p {
+  color: #000000 !important;
+}
+
+.consent-label {
+  color: #000000 !important;
+}
+
+.signup-form-container {
+  background: #ffffff;
+}
+
+.signup-form-container h2 {
+  color: #000000 !important;
+}
+
+/* NIL Platform Agreement specific styling */
+.nil-platform-agreement {
+  color: #000000 !important;
+}
+
+.nil-platform-agreement h3 {
+  color: #000000 !important;
+}
+
+.nil-platform-agreement p {
+  color: #000000 !important;
+} 
+
+/* Template Selection Dropdown Styles */
+.template-selection {
+  margin-bottom: 25px;
+}
+
+.template-selection .form-group {
+  margin-bottom: 0;
+}
+
+.template-selection select {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #000000 !important;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.template-selection select:focus {
+  outline: none;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.template-selection select option {
+  color: #000000 !important;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.template-selection label {
+  color: #000000 !important;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: block;
+  font-size: 16px;
+} 
