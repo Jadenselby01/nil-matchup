@@ -1,28 +1,28 @@
-import { loadStripe } from '@stripe/stripe-js';
-import { supabase } from '../config/supabase';
+import { createClient } from '@supabase/supabase-js';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const stripeService = {
-  // Initialize Stripe
-  getStripe: async () => {
-    return await stripePromise;
-  },
+class StripeService {
+  constructor() {
+    this.isProduction = process.env.NODE_ENV === 'production';
+    this.baseUrl = this.isProduction 
+      ? 'https://nil-matchup-deploy.vercel.app/api'
+      : 'http://localhost:3000/api';
+  }
 
-  // Create payment intent for a deal
-  createPaymentIntent: async (dealId, amount, currency = 'usd', athleteId, businessId) => {
+  async createPaymentIntent(amount, currency = 'usd', metadata = {}) {
     try {
-      const response = await fetch('/api/create-payment-intent', {
+      const response = await fetch(`${this.baseUrl}/create-payment-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          dealId,
-          amount: Math.round(amount * 100), // Convert to cents
+          amount,
           currency,
-          athleteId,
-          businessId,
+          metadata,
         }),
       });
 
@@ -32,233 +32,58 @@ export const stripeService = {
       }
 
       const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
       return data.clientSecret;
     } catch (error) {
       console.error('Error creating payment intent:', error);
-      throw error;
+      throw new Error(`Payment initialization failed: ${error.message}`);
     }
-  },
+  }
 
-  // Process payment with Stripe Elements
-  processPayment: async (clientSecret, paymentMethod) => {
+  async verifyPayment(paymentIntentId) {
     try {
-      const stripe = await stripePromise;
-      
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: paymentMethod,
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return paymentIntent;
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      throw error;
-    }
-  },
-
-  // Save payment record to database
-  savePaymentRecord: async (paymentData) => {
-    try {
-      const { data, error } = await supabase
-        .from('payments')
-        .insert([{
-          deal_id: paymentData.dealId,
-          athlete_id: paymentData.athleteId,
-          business_id: paymentData.businessId,
-          amount: paymentData.amount,
-          currency: paymentData.currency,
-          stripe_payment_intent_id: paymentData.paymentIntentId,
-          status: paymentData.status,
-          payment_method: paymentData.paymentMethod,
-          created_at: new Date().toISOString(),
-        }])
-        .select();
-
-      if (error) {
-        throw error;
-      }
-
-      return data[0];
-    } catch (error) {
-      console.error('Error saving payment record:', error);
-      throw error;
-    }
-  },
-
-  // Get payment history for a user
-  getPaymentHistory: async (userId, userType) => {
-    try {
-      let query = supabase
-        .from('payments')
-        .select(`
-          *,
-          deals (ad_type, description),
-          athletes (name, sport),
-          businesses (company_name, industry)
-        `);
-
-      if (userType === 'athlete') {
-        query = query.eq('athlete_id', userId);
-      } else if (userType === 'business') {
-        query = query.eq('business_id', userId);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error getting payment history:', error);
-      throw error;
-    }
-  },
-
-  // Verify payment status with Stripe
-  verifyPayment: async (paymentIntentId) => {
-    try {
-      const response = await fetch(`/api/verify-payment?payment_intent_id=${paymentIntentId}`, {
-        method: 'GET',
+      const response = await fetch(`${this.baseUrl}/verify-payment`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          paymentIntentId,
+        }),
       });
 
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to verify payment');
       }
 
+      const data = await response.json();
       return data.paymentIntent;
     } catch (error) {
       console.error('Error verifying payment:', error);
-      throw error;
+      throw new Error(`Payment verification failed: ${error.message}`);
     }
-  },
+  }
 
-  // Handle payment success
-  handlePaymentSuccess: async (paymentIntent, dealId) => {
-    try {
-      // Update deal status to 'completed'
-      const { error: dealError } = await supabase
-        .from('deals')
-        .update({ 
-          status: 'completed',
-          payment_completed_at: new Date().toISOString()
-        })
-        .eq('id', dealId);
-
-      if (dealError) {
-        throw dealError;
-      }
-
-      // Save payment record
-      const paymentRecord = await stripeService.savePaymentRecord({
-        dealId,
-        athleteId: paymentIntent.metadata.athlete_id,
-        businessId: paymentIntent.metadata.business_id,
-        amount: paymentIntent.amount / 100, // Convert from cents
-        currency: paymentIntent.currency,
-        paymentIntentId: paymentIntent.id,
-        status: paymentIntent.status,
-        paymentMethod: paymentIntent.payment_method_types[0],
-      });
-
-      return paymentRecord;
-    } catch (error) {
-      console.error('Error handling payment success:', error);
-      throw error;
-    }
-  },
-
-  // Get payment statistics
-  getPaymentStats: async (userId, userType) => {
-    try {
-      let query = supabase
-        .from('payments')
-        .select('amount, status, created_at');
-
-      if (userType === 'athlete') {
-        query = query.eq('athlete_id', userId);
-      } else if (userType === 'business') {
-        query = query.eq('business_id', userId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      const stats = {
-        totalEarnings: data
-          .filter(p => p.status === 'succeeded')
-          .reduce((sum, p) => sum + parseFloat(p.amount), 0),
-        totalPayments: data.length,
-        successfulPayments: data.filter(p => p.status === 'succeeded').length,
-        pendingPayments: data.filter(p => p.status === 'processing').length,
-      };
-
-      return stats;
-    } catch (error) {
-      console.error('Error getting payment stats:', error);
-      throw error;
-    }
-  },
-
-  // Smart Templates
-  createSmartTemplate: async (templateData) => {
-    const { data, error } = await supabase
-      .from('smart_templates')
-      .insert([templateData])
-      .select();
-    return { data, error };
-  },
-
-  getSmartTemplates: async (businessId) => {
-    const { data, error } = await supabase
-      .from('smart_templates')
-      .select('*')
-      .eq('business_id', businessId);
-    return { data, error };
-  },
-
-  // Athlete Payment Methods
-  saveAthletePaymentMethod: async (athleteId, paymentMethodId) => {
+  async saveAthletePaymentMethod(athleteId, stripePaymentMethodId) {
     try {
       const { data, error } = await supabase
         .from('athlete_payment_methods')
-        .upsert([{
+        .upsert({
           athlete_id: athleteId,
-          stripe_payment_method_id: paymentMethodId,
+          stripe_payment_method_id: stripePaymentMethodId,
           is_active: true,
-          created_at: new Date().toISOString()
-        }])
-        .select();
+          updated_at: new Date().toISOString(),
+        });
 
-      if (error) {
-        throw error;
-      }
-
-      return data[0];
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Error saving athlete payment method:', error);
-      throw error;
+      throw new Error(`Failed to save payment method: ${error.message}`);
     }
-  },
+  }
 
-  getAthletePaymentMethod: async (athleteId) => {
+  async getAthletePaymentMethod(athleteId) {
     try {
       const { data, error } = await supabase
         .from('athlete_payment_methods')
@@ -267,14 +92,68 @@ export const stripeService = {
         .eq('is_active', true)
         .single();
 
-      if (error) {
-        throw error;
-      }
-
+      if (error && error.code !== 'PGRST116') throw error;
       return data;
     } catch (error) {
       console.error('Error getting athlete payment method:', error);
-      throw error;
+      return null;
     }
   }
-}; 
+
+  async handlePaymentSuccess(paymentIntent, dealId) {
+    try {
+      // Record successful payment in database
+      const { data, error } = await supabase
+        .from('payments')
+        .insert({
+          deal_id: dealId,
+          stripe_payment_intent_id: paymentIntent.id,
+          amount: paymentIntent.amount / 100, // Convert from cents
+          status: 'completed',
+          payment_date: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      // Update deal status to completed
+      const { error: dealError } = await supabase
+        .from('deals')
+        .update({ status: 'completed' })
+        .eq('id', dealId);
+
+      if (dealError) throw dealError;
+
+      return data;
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      throw new Error(`Failed to record payment: ${error.message}`);
+    }
+  }
+
+  // Production environment check
+  checkProductionEnvironment() {
+    if (this.isProduction) {
+      console.log('🚀 Running in PRODUCTION mode');
+      console.log('💰 Real payments will be processed');
+    } else {
+      console.log('🧪 Running in DEVELOPMENT mode');
+      console.log('💳 Test payments only');
+    }
+    return this.isProduction;
+  }
+
+  // Get Stripe configuration status
+  getStripeConfigStatus() {
+    const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    
+    return {
+      publishableKey: !!publishableKey,
+      secretKey: !!secretKey,
+      isProduction: publishableKey?.startsWith('pk_live_'),
+      isConfigured: !!(publishableKey && secretKey),
+    };
+  }
+}
+
+export default new StripeService(); 

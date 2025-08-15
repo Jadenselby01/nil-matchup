@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { stripeService } from '../services/stripeService';
+import stripeService from '../services/stripeService';
 import './PaymentForm.css';
 
 const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) => {
