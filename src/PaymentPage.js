@@ -28,7 +28,8 @@ function PaymentPage({ currentUser, onBack }) {
       return {
         id: 'deal-' + Date.now(),
         ad_type: 'Social Media Promotion',
-        amount: 1500.00,
+        amount: 500.00, // Default amount, but user can change this
+        title: 'Social Media Campaign',
         description: 'Instagram and TikTok posts promoting local business',
         business: currentUser?.type === 'business' ? {
           company_name: currentUser.company_name || 'Your Business',

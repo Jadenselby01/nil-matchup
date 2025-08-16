@@ -13,6 +13,19 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
   const [paymentStatus, setPaymentStatus] = useState('idle');
   const [paymentMode, setPaymentMode] = useState(''); // 'send' or 'receive'
   const [stripeAvailable, setStripeAvailable] = useState(false);
+  const [amount, setAmount] = useState(deal?.amount || 0);
+  const [serviceFee, setServiceFee] = useState(0);
+  const [athleteReceives, setAthleteReceives] = useState(0);
+
+  // Calculate service fee and athlete amount whenever amount changes
+  useEffect(() => {
+    if (amount > 0) {
+      const fee = Math.round(amount * 0.10 * 100) / 100; // 10% service fee, rounded to 2 decimal places
+      const athleteAmount = amount - fee;
+      setServiceFee(fee);
+      setAthleteReceives(athleteAmount);
+    }
+  }, [amount]);
 
   // Check if Stripe is properly configured
   useEffect(() => {
@@ -41,6 +54,11 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
         return;
       }
 
+      if (amount <= 0) {
+        setError('Please enter a valid amount greater than $0');
+        return;
+      }
+
       setLoading(true);
       setError(null);
       
@@ -49,7 +67,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
         setPaymentMode('send');
         
         // Business pays the full deal amount, service fee comes out of athlete's payment
-        const totalAmount = deal.amount; // Business pays exactly what was agreed
+        const totalAmount = amount; // Business pays exactly what was agreed
         
         // Create payment intent with correct parameters
         const secret = await stripeService.createPaymentIntent(
@@ -59,10 +77,10 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
             dealId: deal.id,
             athleteId: deal.athlete?.id || currentUser.id,
             businessId: currentUser.id,
-            originalAmount: deal.amount,
-            serviceFee: Math.round(deal.amount * 0.10), // 10% of deal amount
-            athleteReceives: deal.amount - Math.round(deal.amount * 0.10), // athlete gets 90%
-            businessPays: deal.amount // business pays 100%
+            originalAmount: amount,
+            serviceFee: serviceFee,
+            athleteReceives: athleteReceives,
+            businessPays: amount // business pays 100%
           }
         );
         setClientSecret(secret);
@@ -78,19 +96,24 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
     } finally {
       setLoading(false);
     }
-  }, [deal, isBusiness, isAthlete, currentUser, stripeAvailable]);
+  }, [deal, isBusiness, isAthlete, currentUser, stripeAvailable, amount, serviceFee, athleteReceives]);
 
   useEffect(() => {
-    if (deal && deal.amount && (isBusiness || isAthlete) && stripeAvailable) {
+    if (deal && amount > 0 && (isBusiness || isAthlete) && stripeAvailable) {
       initializePayment();
     }
-  }, [deal, initializePayment, isBusiness, isAthlete, stripeAvailable]);
+  }, [deal, initializePayment, isBusiness, isAthlete, stripeAvailable, amount]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!stripe || !elements) {
       setError('Payment system not ready. Please try again.');
+      return;
+    }
+
+    if (amount <= 0) {
+      setError('Please enter a valid amount greater than $0');
       return;
     }
 
@@ -200,9 +223,9 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
 
           <div className="deal-summary">
             <h4>Deal: {deal.title}</h4>
-            <p className="deal-amount">Amount: ${deal.amount}</p>
-            <p className="service-fee">Service Fee (10%): ${Math.round(deal.amount * 0.10)}</p>
-            <p className="athlete-receives">Athlete Receives: ${deal.amount - Math.round(deal.amount * 0.10)}</p>
+            <p className="deal-amount">Amount: ${amount}</p>
+            <p className="service-fee">Service Fee (10%): ${serviceFee}</p>
+            <p className="athlete-receives">Athlete Receives: ${athleteReceives}</p>
             <p className="deal-business">Athlete: {deal.athlete?.name || 'Athlete'}</p>
           </div>
 
@@ -242,8 +265,6 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
               {loading ? 'Saving...' : 'Save Payment Info'}
             </button>
           </div>
-
-          {/* The success and error states were not part of the new_code, so they are removed. */}
         </div>
       </div>
     );
@@ -271,7 +292,9 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
         <h3>Payment {isBusiness ? 'Sent' : 'Info Saved'} Successfully!</h3>
         {isBusiness ? (
           <>
-            <p>Your payment of ${deal.amount} has been sent to the athlete.</p>
+            <p>Your payment of ${amount} has been sent to the athlete.</p>
+            <p>Service fee (10%): ${serviceFee}</p>
+            <p>Athlete receives: ${athleteReceives}</p>
             <p>You will receive a confirmation email shortly.</p>
           </>
         ) : (
@@ -296,9 +319,37 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
         <h3>{isBusiness ? 'Send Payment' : 'Set Up Payment Info'}</h3>
         <div className="deal-summary">
           <p><strong>Deal:</strong> {deal.ad_type}</p>
-          <p><strong>Amount:</strong> ${deal.amount}</p>
+          {isBusiness && (
+            <div className="amount-input-section">
+              <label htmlFor="amount-input">
+                <strong>Payment Amount ($):</strong>
+              </label>
+              <input
+                id="amount-input"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                placeholder="Enter amount"
+                className="amount-input"
+              />
+            </div>
+          )}
+          {!isBusiness && (
+            <p><strong>Amount:</strong> ${amount}</p>
+          )}
           {isBusiness ? (
-            <p><strong>Athlete:</strong> {deal.athlete?.name}</p>
+            <>
+              <p><strong>Athlete:</strong> {deal.athlete?.name}</p>
+              {amount > 0 && (
+                <div className="payment-breakdown">
+                  <p><strong>Service Fee (10%):</strong> ${serviceFee}</p>
+                  <p><strong>Athlete Receives:</strong> ${athleteReceives}</p>
+                  <p><strong>Total You Pay:</strong> ${amount}</p>
+                </div>
+              )}
+            </>
           ) : (
             <p><strong>Business:</strong> {deal.business?.company_name}</p>
           )}
@@ -326,7 +377,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
 
         <button
           type="submit"
-          disabled={!stripe || loading || !clientSecret || clientSecret === 'athlete-receive-mode'}
+          disabled={!stripe || loading || !clientSecret || clientSecret === 'athlete-receive-mode' || amount <= 0}
           className={`btn-pay ${loading ? 'loading' : ''}`}
         >
           {loading ? (
@@ -335,7 +386,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
               {isBusiness ? 'Processing Payment...' : 'Saving Payment Info...'}
             </span>
           ) : (
-            isBusiness ? `Send $${deal.amount}` : 'Save Payment Info'
+            isBusiness ? `Send $${amount}` : 'Save Payment Info'
           )}
         </button>
 
@@ -344,6 +395,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
             <>
               <p>💳 <strong>Business Payment:</strong> You are sending money to the athlete</p>
               <p>✅ Payment will be processed immediately</p>
+              <p>💰 <strong>Fee Structure:</strong> You pay ${amount}, athlete receives ${athleteReceives} (10% service fee: ${serviceFee})</p>
             </>
           ) : (
             <>

@@ -60,9 +60,9 @@ const PaymentProcessingPage = ({ dealId, onComplete, onBack }) => {
         name: 'Sports Gear Co.',
         type: 'Sports Equipment'
       },
-      dealAmount: 1500,
-      serviceFee: 75, // 5% of 1500
-      totalAmount: 1575,
+      dealAmount: 500,
+      serviceFee: 50, // 10% of 500
+      totalAmount: 500,
       deliverables: '1x Instagram Story tagging @sportsgearco within 7 days',
       deadline: '2024-02-15',
       status: 'accepted'
