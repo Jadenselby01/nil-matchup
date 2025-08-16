@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './PaymentProcessingPage.css';
 
+const isUuid = v =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
 const PaymentProcessingPage = ({ dealId, onComplete, onBack }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [deal, setDeal] = useState(null);
@@ -50,7 +53,7 @@ const PaymentProcessingPage = ({ dealId, onComplete, onBack }) => {
   useEffect(() => {
     // In real app, fetch deal data from backend
     const mockDeal = {
-      id: dealId || 'deal-123',
+      id: dealId,
       athlete: {
         name: 'Michael Johnson',
         sport: 'Football',
@@ -113,6 +116,17 @@ const PaymentProcessingPage = ({ dealId, onComplete, onBack }) => {
           throw new Error('Please fill in all bank account information');
         }
       }
+
+      // UUID validation guard for when stripeService.createPaymentIntent is integrated:
+      // const realDealId = (dealDetails?.id ?? dealId ?? selectedDeal?.id);
+      // if (!isUuid(realDealId)) {
+      //   console.error('Invalid deal UUID for payment', { realDealId });
+      //   if (typeof setError === 'function') setError('Cannot start payment: missing valid deal.');
+      //   else alert('Cannot start payment: missing valid deal.');
+      //   return;
+      // }
+      // Then update the createPaymentIntent call to include the UUID:
+      // await stripeService.createPaymentIntent(amount, 'usd', { deal_id: realDealId });
 
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
