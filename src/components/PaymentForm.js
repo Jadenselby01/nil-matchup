@@ -47,12 +47,23 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
       // For businesses: create payment intent to send money
       if (isBusiness) {
         setPaymentMode('send');
+        
+        // Calculate service fee (10%)
+        const serviceFee = Math.round(deal.amount * 0.10);
+        const totalAmount = deal.amount + serviceFee;
+        
+        // Create payment intent with correct parameters
         const secret = await stripeService.createPaymentIntent(
-          deal.id,
-          deal.amount,
+          totalAmount, // total amount including service fee
           'usd',
-          deal.athlete?.id || currentUser.id, // athlete ID
-          currentUser.id // business ID
+          {
+            dealId: deal.id,
+            athleteId: deal.athlete?.id || currentUser.id,
+            businessId: currentUser.id,
+            originalAmount: deal.amount,
+            serviceFee: serviceFee,
+            totalAmount: totalAmount
+          }
         );
         setClientSecret(secret);
       }
@@ -189,8 +200,10 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
 
           <div className="deal-summary">
             <h4>Deal: {deal.title}</h4>
-            <p className="deal-amount">Amount: ${deal.amount}</p>
-            <p className="deal-business">Business: {deal.business.name}</p>
+            <p className="deal-amount">Original Amount: ${deal.amount}</p>
+            <p className="service-fee">Service Fee (10%): ${Math.round(deal.amount * 0.10)}</p>
+            <p className="total-amount">Total Amount: ${deal.amount + Math.round(deal.amount * 0.10)}</p>
+            <p className="deal-business">Athlete: {deal.athlete?.name || 'Athlete'}</p>
           </div>
 
           <div className="payment-notice">
@@ -313,7 +326,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
 
         <button
           type="submit"
-          disabled={!stripe || loading}
+          disabled={!stripe || loading || !clientSecret || clientSecret === 'athlete-receive-mode'}
           className={`btn-pay ${loading ? 'loading' : ''}`}
         >
           {loading ? (
@@ -322,7 +335,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
               {isBusiness ? 'Processing Payment...' : 'Saving Payment Info...'}
             </span>
           ) : (
-            isBusiness ? `Send $${deal.amount}` : 'Save Payment Info'
+            isBusiness ? `Send $${deal.amount + Math.round(deal.amount * 0.10)}` : 'Save Payment Info'
           )}
         </button>
 
