@@ -111,18 +111,19 @@ class StripeService {
 
   async handlePaymentSuccess(paymentIntent, dealId) {
     try {
-      // Validate dealId is a UUID
-      if (!dealId || !this.isUuid(dealId)) {
-        throw new Error(`dealId must be a UUID (deals.id), got: ${dealId}`);
+      // Prefer the id from PaymentIntent metadata; validate before insert
+      const realDealId = paymentIntent?.metadata?.deal_id ?? dealId;
+      if (!this.isUuid(realDealId)) {
+        throw new Error(`dealId must be a UUID (deals.id). Received: ${realDealId}`);
       }
 
       // Record successful payment in database - using only existing columns
       const { data, error } = await this.supabase
         .from('payments')
         .insert({
-          deal_id: dealId,
+          deal_id: realDealId,
           stripe_payment_intent_id: paymentIntent.id,
-          amount: paymentIntent.amount / 100, // Convert from cents
+          amount: paymentIntent.amount ? paymentIntent.amount / 100 : null,
           status: 'completed',
           // Note: payment_date column doesn't exist yet in the database
           // The database will use the default created_at timestamp
@@ -140,7 +141,7 @@ class StripeService {
         const { error: dealError } = await this.supabase
           .from('deals')
           .update({ status: 'completed' })
-          .eq('id', dealId);
+          .eq('id', realDealId);
 
         if (dealError) {
           console.warn('Could not update deal status:', dealError);

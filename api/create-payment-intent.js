@@ -2,6 +2,9 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const isUuid = v =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -17,21 +20,28 @@ export default async function handler(req, res) {
 
   try {
     const { amount, currency = 'usd', metadata = {} } = req.body;
+    const dealId = metadata?.deal_id;
 
     // Validate amount
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: 'Invalid amount' });
     }
 
+    // Validate deal_id is a UUID if provided
+    if (dealId && !isUuid(dealId)) {
+      return res.status(400).json({ error: `Invalid deal_id (must be UUID). Got: ${dealId}` });
+    }
+
     // Convert amount to cents if it's a decimal
     const amountInCents = Math.round(parseFloat(amount) * 100);
 
-    // Create payment intent
+    // Create payment intent with validated metadata
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency,
       metadata: {
         ...metadata,
+        deal_id: dealId, // Pass through the validated deal_id
         environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString(),
       },
