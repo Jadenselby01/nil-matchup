@@ -1,19 +1,14 @@
-const stripeService = new StripeService();
-
-export default stripeService;
-export { StripeService, stripeService };
 import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 class StripeService {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
-    this.baseUrl = this.isProduction 
-      ? 'https://nil-matchup-deploy.vercel.app/api'
-      : 'http://localhost:3000/api';
+    this.baseUrl = this.isProduction ? '/api' : 'http://localhost:3000/api';
+    
+    // Initialize Supabase client
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
   async createPaymentIntent(amount, currency = 'usd', metadata = {}) {
@@ -70,7 +65,7 @@ class StripeService {
 
   async saveAthletePaymentMethod(athleteId, stripePaymentMethodId) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('athlete_payment_methods')
         .upsert({
           athlete_id: athleteId,
@@ -89,7 +84,7 @@ class StripeService {
 
   async getAthletePaymentMethod(athleteId) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('athlete_payment_methods')
         .select('*')
         .eq('athlete_id', athleteId)
@@ -107,7 +102,7 @@ class StripeService {
   async handlePaymentSuccess(paymentIntent, dealId) {
     try {
       // Record successful payment in database
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('payments')
         .insert({
           deal_id: dealId,
@@ -120,7 +115,7 @@ class StripeService {
       if (error) throw error;
 
       // Update deal status to completed
-      const { error: dealError } = await supabase
+      const { error: dealError } = await this.supabase
         .from('deals')
         .update({ status: 'completed' })
         .eq('id', dealId);
@@ -149,14 +144,15 @@ class StripeService {
   // Get Stripe configuration status
   getStripeConfigStatus() {
     const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
-    const secretKey = process.env.STRIPE_SECRET_KEY;
     
     return {
       publishableKey: !!publishableKey,
-      secretKey: !!secretKey,
       isProduction: publishableKey?.startsWith('pk_live_'),
-      isConfigured: !!(publishableKey && secretKey),
+      isConfigured: !!publishableKey,
     };
   }
 }
 
+const stripeService = new StripeService();
+export default stripeService;
+export { StripeService, stripeService };
