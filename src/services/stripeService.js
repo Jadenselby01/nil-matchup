@@ -101,7 +101,7 @@ class StripeService {
 
   async handlePaymentSuccess(paymentIntent, dealId) {
     try {
-      // Record successful payment in database
+      // Record successful payment in database - using only existing columns
       const { data, error } = await this.supabase
         .from('payments')
         .insert({
@@ -109,39 +109,29 @@ class StripeService {
           stripe_payment_intent_id: paymentIntent.id,
           amount: paymentIntent.amount / 100, // Convert from cents
           status: 'completed',
-          // Note: payment_date will use the default value from database
-          // If the column doesn't exist yet, this will still work
+          // Note: payment_date column doesn't exist yet in the database
+          // The database will use the default created_at timestamp
         });
 
       if (error) {
         console.error('Database error:', error);
-        // If it's a column error, try without the problematic column
-        if (error.message.includes('payment_date')) {
-          const { data: fallbackData, error: fallbackError } = await this.supabase
-            .from('payments')
-            .insert({
-              deal_id: dealId,
-              stripe_payment_intent_id: paymentIntent.id,
-              amount: paymentIntent.amount / 100,
-              status: 'completed',
-            });
-          
-          if (fallbackError) throw fallbackError;
-          data = fallbackData;
-        } else {
-          throw error;
-        }
+        throw error;
       }
 
-      // Update deal status to completed
-      const { error: dealError } = await this.supabase
-        .from('deals')
-        .update({ status: 'completed' })
-        .eq('id', dealId);
+      // Try to update deal status to completed (optional - don't fail if this doesn't work)
+      try {
+        const { error: dealError } = await this.supabase
+          .from('deals')
+          .update({ status: 'completed' })
+          .eq('id', dealId);
 
-      if (dealError) {
-        console.warn('Could not update deal status:', dealError);
-        // Don't fail the payment if deal update fails
+        if (dealError) {
+          console.warn('Could not update deal status:', dealError);
+          // This is not critical - payment was successful
+        }
+      } catch (dealUpdateError) {
+        console.warn('Deal status update failed:', dealUpdateError);
+        // Continue - payment was successful
       }
 
       return data;
