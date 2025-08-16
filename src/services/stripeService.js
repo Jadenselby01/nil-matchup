@@ -109,10 +109,29 @@ class StripeService {
           stripe_payment_intent_id: paymentIntent.id,
           amount: paymentIntent.amount / 100, // Convert from cents
           status: 'completed',
-          payment_date: new Date().toISOString(),
+          // Note: payment_date will use the default value from database
+          // If the column doesn't exist yet, this will still work
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        // If it's a column error, try without the problematic column
+        if (error.message.includes('payment_date')) {
+          const { data: fallbackData, error: fallbackError } = await this.supabase
+            .from('payments')
+            .insert({
+              deal_id: dealId,
+              stripe_payment_intent_id: paymentIntent.id,
+              amount: paymentIntent.amount / 100,
+              status: 'completed',
+            });
+          
+          if (fallbackError) throw fallbackError;
+          data = fallbackData;
+        } else {
+          throw error;
+        }
+      }
 
       // Update deal status to completed
       const { error: dealError } = await this.supabase
@@ -120,7 +139,10 @@ class StripeService {
         .update({ status: 'completed' })
         .eq('id', dealId);
 
-      if (dealError) throw dealError;
+      if (dealError) {
+        console.warn('Could not update deal status:', dealError);
+        // Don't fail the payment if deal update fails
+      }
 
       return data;
     } catch (error) {

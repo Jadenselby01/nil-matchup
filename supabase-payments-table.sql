@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS payments (
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'succeeded', 'failed', 'canceled')),
     payment_method TEXT,
     payment_method_details JSONB,
+    payment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     metadata JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -57,6 +58,7 @@ CREATE INDEX IF NOT EXISTS idx_payments_business_id ON payments(business_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_stripe_payment_intent_id ON payments(stripe_payment_intent_id);
 CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at);
+CREATE INDEX IF NOT EXISTS idx_payments_payment_date ON payments(payment_date);
 
 -- Create trigger for updated_at
 DROP TRIGGER IF EXISTS update_payments_updated_at ON payments;
@@ -100,7 +102,7 @@ SELECT
     CASE 
         WHEN table_name = 'payments' THEN '✅ Created'
         ELSE '❌ Not Created'
-    END as status
+        END as status
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
 AND table_name = 'payments'; 
