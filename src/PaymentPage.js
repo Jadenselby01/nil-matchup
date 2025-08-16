@@ -11,6 +11,19 @@ function PaymentPage({ currentUser, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // UUID generation function with fallback
+  const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    // Fallback UUID generation
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   useEffect(() => {
     // Get deal from URL params or localStorage, or create a sample deal for testing
     const getDealData = () => {
@@ -26,7 +39,7 @@ function PaymentPage({ currentUser, onBack }) {
 
       // Create a sample deal for testing if no real deal exists
       return {
-        id: 'deal-' + Date.now(),
+        id: generateUUID(), // Generate a proper UUID for testing
         ad_type: 'Social Media Promotion',
         amount: 500.00, // Default amount, but user can change this
         title: 'Social Media Campaign',

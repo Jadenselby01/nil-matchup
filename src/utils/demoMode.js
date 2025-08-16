@@ -442,8 +442,21 @@ export const demoDealsAPI = {
   applyToDeal: async (athleteId, businessId, dealData) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // Generate proper UUID for deal ID
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      // Fallback UUID generation
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    
     const newDeal = {
-      id: `deal-${Date.now()}`,
+      id: generateUUID(), // Use proper UUID instead of custom string
       athleteId,
       businessId,
       athleteName: demoUsers.athlete.name,
