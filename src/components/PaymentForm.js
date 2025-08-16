@@ -48,21 +48,21 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
       if (isBusiness) {
         setPaymentMode('send');
         
-        // Calculate service fee (10%)
-        const serviceFee = Math.round(deal.amount * 0.10);
-        const totalAmount = deal.amount + serviceFee;
+        // Business pays the full deal amount, service fee comes out of athlete's payment
+        const totalAmount = deal.amount; // Business pays exactly what was agreed
         
         // Create payment intent with correct parameters
         const secret = await stripeService.createPaymentIntent(
-          totalAmount, // total amount including service fee
+          totalAmount, // business pays the full deal amount
           'usd',
           {
             dealId: deal.id,
             athleteId: deal.athlete?.id || currentUser.id,
             businessId: currentUser.id,
             originalAmount: deal.amount,
-            serviceFee: serviceFee,
-            totalAmount: totalAmount
+            serviceFee: Math.round(deal.amount * 0.10), // 10% of deal amount
+            athleteReceives: deal.amount - Math.round(deal.amount * 0.10), // athlete gets 90%
+            businessPays: deal.amount // business pays 100%
           }
         );
         setClientSecret(secret);
@@ -200,9 +200,9 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
 
           <div className="deal-summary">
             <h4>Deal: {deal.title}</h4>
-            <p className="deal-amount">Original Amount: ${deal.amount}</p>
+            <p className="deal-amount">Amount: ${deal.amount}</p>
             <p className="service-fee">Service Fee (10%): ${Math.round(deal.amount * 0.10)}</p>
-            <p className="total-amount">Total Amount: ${deal.amount + Math.round(deal.amount * 0.10)}</p>
+            <p className="athlete-receives">Athlete Receives: ${deal.amount - Math.round(deal.amount * 0.10)}</p>
             <p className="deal-business">Athlete: {deal.athlete?.name || 'Athlete'}</p>
           </div>
 
@@ -335,7 +335,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
               {isBusiness ? 'Processing Payment...' : 'Saving Payment Info...'}
             </span>
           ) : (
-            isBusiness ? `Send $${deal.amount + Math.round(deal.amount * 0.10)}` : 'Save Payment Info'
+            isBusiness ? `Send $${deal.amount}` : 'Save Payment Info'
           )}
         </button>
 
