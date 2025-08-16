@@ -1,3 +1,7 @@
+const stripeService = new StripeService();
+
+export default stripeService;
+export { StripeService, stripeService };
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -156,4 +160,3 @@ class StripeService {
   }
 }
 
-export default new StripeService(); 
