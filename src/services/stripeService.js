@@ -11,8 +11,18 @@ class StripeService {
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
+  // UUID validation function
+  isUuid(v) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  }
+
   async createPaymentIntent(amount, currency = 'usd', metadata = {}) {
     try {
+      // Validate deal_id is a UUID if provided
+      if (metadata.deal_id && !this.isUuid(metadata.deal_id)) {
+        throw new Error(`deal_id must be a UUID, got: ${metadata.deal_id}`);
+      }
+
       const response = await fetch(`${this.baseUrl}/create-payment-intent`, {
         method: 'POST',
         headers: {
@@ -101,6 +111,11 @@ class StripeService {
 
   async handlePaymentSuccess(paymentIntent, dealId) {
     try {
+      // Validate dealId is a UUID
+      if (!dealId || !this.isUuid(dealId)) {
+        throw new Error(`dealId must be a UUID (deals.id), got: ${dealId}`);
+      }
+
       // Record successful payment in database - using only existing columns
       const { data, error } = await this.supabase
         .from('payments')
@@ -111,7 +126,9 @@ class StripeService {
           status: 'completed',
           // Note: payment_date column doesn't exist yet in the database
           // The database will use the default created_at timestamp
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Database error:', error);

@@ -33,42 +33,42 @@ export default async function handler(req, res) {
       
       try {
         // Extract metadata from payment intent
-        const { dealId, athleteId, businessId, originalAmount, serviceFee, athleteReceives } = paymentIntent.metadata;
+        const { deal_id, athleteId, businessId, originalAmount, serviceFee, athleteReceives } = paymentIntent.metadata;
         
-        if (dealId && athleteId && businessId) {
-          // Record the payment in database
+        if (deal_id && athleteId && businessId) {
+          // Record the payment in database - using only existing columns
           const { error: paymentError } = await supabase
             .from('payments')
             .insert({
-              deal_id: dealId,
+              deal_id: deal_id,
               stripe_payment_intent_id: paymentIntent.id,
               amount: originalAmount / 100, // Convert from cents
-              service_fee: serviceFee / 100, // Convert from cents
-              athlete_receives: athleteReceives / 100, // Convert from cents
-              business_pays: originalAmount / 100, // Convert from cents
               status: 'completed',
-              payment_date: new Date().toISOString(),
+              // Note: Only using columns that exist in the current database
             });
 
           if (paymentError) {
             console.error('Failed to record payment:', paymentError);
           } else {
-            console.log('Payment recorded successfully with fee structure');
+            console.log('Payment recorded successfully');
           }
 
-          // Update deal status to completed
-          const { error: dealError } = await supabase
-            .from('deals')
-            .update({ 
-              status: 'completed',
-              completed_at: new Date().toISOString()
-            })
-            .eq('id', dealId);
+          // Try to update deal status to completed (optional)
+          try {
+            const { error: dealError } = await supabase
+              .from('deals')
+              .update({ 
+                status: 'completed'
+              })
+              .eq('id', deal_id);
 
-          if (dealError) {
-            console.error('Failed to update deal status:', dealError);
-          } else {
-            console.log('Deal status updated to completed');
+            if (dealError) {
+              console.warn('Could not update deal status:', dealError);
+            } else {
+              console.log('Deal status updated to completed');
+            }
+          } catch (dealUpdateError) {
+            console.warn('Deal status update failed:', dealUpdateError);
           }
         }
       } catch (error) {

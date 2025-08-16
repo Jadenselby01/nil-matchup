@@ -74,7 +74,7 @@ const PaymentForm = ({ deal, currentUser, onPaymentSuccess, onPaymentError }) =>
           totalAmount, // business pays the full deal amount
           'usd',
           {
-            dealId: deal.id,
+            deal_id: deal.id, // Use deal_id to match API expectations
             athleteId: deal.athlete?.id || currentUser.id,
             businessId: currentUser.id,
             originalAmount: amount,
