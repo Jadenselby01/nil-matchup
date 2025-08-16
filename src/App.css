@@ -2465,3 +2465,155 @@
 .success-box p:last-child {
   margin-bottom: 0;
 } 
+
+/* Business Signup Page - White Text for All Titles */
+.business-signup h1 {
+  color: #ffffff !important;
+}
+
+.business-signup h2 {
+  color: #ffffff !important;
+}
+
+.business-signup h3 {
+  color: #ffffff !important;
+}
+
+.business-signup h4 {
+  color: #ffffff !important;
+}
+
+.business-signup h5 {
+  color: #ffffff !important;
+}
+
+.business-signup h6 {
+  color: #ffffff !important;
+}
+
+/* Business Signup Section Titles - White */
+.business-signup .section-title {
+  color: #ffffff !important;
+}
+
+.business-signup .form-section h3 {
+  color: #ffffff !important;
+}
+
+.business-signup .form-section h4 {
+  color: #ffffff !important;
+}
+
+/* Business Signup Specific Elements - White */
+.business-signup .legal-agreements h3 {
+  color: #ffffff !important;
+}
+
+.business-signup .legal-agreements h4 {
+  color: #ffffff !important;
+}
+
+.business-signup .partnership-requests h3 {
+  color: #ffffff !important;
+}
+
+.business-signup .partnership-requests h4 {
+  color: #ffffff !important;
+}
+
+.business-signup .basic-information h3 {
+  color: #ffffff !important;
+}
+
+.business-signup .basic-information h4 {
+  color: #ffffff !important;
+}
+
+/* Business Signup Form Labels - White */
+.business-signup label {
+  color: #ffffff !important;
+}
+
+.business-signup .form-group label {
+  color: #ffffff !important;
+}
+
+.business-signup .form-group h3 {
+  color: #ffffff !important;
+}
+
+.business-signup .form-group h4 {
+  color: #ffffff !important;
+}
+
+/* Business Signup Headers - White */
+.business-signup .signup-header h1 {
+  color: #ffffff !important;
+}
+
+.business-signup .signup-header h2 {
+  color: #ffffff !important;
+}
+
+.business-signup .signup-header h3 {
+  color: #ffffff !important;
+}
+
+/* Business Signup Section Headers - White */
+.business-signup .section-header h3 {
+  color: #ffffff !important;
+}
+
+.business-signup .section-header h4 {
+  color: #ffffff !important;
+}
+
+/* Business Signup All Text Elements - White */
+.business-signup * {
+  color: #ffffff !important;
+}
+
+/* Exception: Keep input fields and buttons readable */
+.business-signup input,
+.business-signup select,
+.business-signup textarea {
+  color: #000000 !important;
+  background: #ffffff;
+}
+
+.business-signup button {
+  color: #ffffff !important;
+}
+
+/* Business Signup Form Container */
+.business-signup .signup-form-container {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 30px;
+}
+
+/* Business Signup Form Groups */
+.business-signup .form-group {
+  margin-bottom: 25px;
+}
+
+.business-signup .form-group h3,
+.business-signup .form-group h4 {
+  color: #ffffff !important;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* Business Signup Section Dividers */
+.business-signup .section-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 30px 0;
+  padding-top: 20px;
+}
+
+.business-signup .section-divider h3 {
+  color: #ffffff !important;
+  text-align: center;
+  margin-bottom: 20px;
+} 
