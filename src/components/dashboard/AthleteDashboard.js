@@ -23,29 +23,8 @@ const AthleteDashboard = ({ onNavigate }) => {
       //   .eq('athlete_id', user.id)
       //   .order('created_at', { ascending: false });
 
-      // For now, use mock data
-      const mockDeals = [
-        {
-          id: 'deal-1',
-          title: 'Social Media Campaign',
-          business_name: 'Local Sports Shop',
-          amount: 500,
-          status: 'active',
-          deadline: '2024-02-15',
-          created_at: '2024-01-15'
-        },
-        {
-          id: 'deal-2',
-          title: 'Product Endorsement',
-          business_name: 'Fitness Brand',
-          amount: 800,
-          status: 'pending',
-          deadline: '2024-03-01',
-          created_at: '2024-01-20'
-        }
-      ];
-
-      setDeals(mockDeals);
+      // For now, show empty state
+      setDeals([]);
     } catch (error) {
       console.error('Error fetching deals:', error);
     } finally {
@@ -176,29 +155,40 @@ const AthleteDashboard = ({ onNavigate }) => {
                 </button>
               </div>
               
-              <div className="deals-list">
-                {deals.map(deal => (
-                  <div key={deal.id} className="deal-card">
-                    <div className="deal-header">
-                      <h4>{deal.title}</h4>
-                      <span className={`status-badge ${getStatusColor(deal.status)}`}>
-                        {deal.status}
-                      </span>
+              {deals.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📋</div>
+                  <h4>No Deals Yet</h4>
+                  <p>You haven't been assigned to any deals yet. Start by discovering available opportunities!</p>
+                  <button className="btn-primary" onClick={handleDiscoverDeals}>
+                    Discover Deals
+                  </button>
+                </div>
+              ) : (
+                <div className="deals-list">
+                  {deals.map(deal => (
+                    <div key={deal.id} className="deal-card">
+                      <div className="deal-header">
+                        <h4>{deal.title}</h4>
+                        <span className={`status-badge ${getStatusColor(deal.status)}`}>
+                          {deal.status}
+                        </span>
+                      </div>
+                      <div className="deal-details">
+                        <p><strong>Business:</strong> {deal.business_name}</p>
+                        <p><strong>Amount:</strong> ${deal.amount}</p>
+                        <p><strong>Deadline:</strong> {deal.deadline}</p>
+                      </div>
+                      <div className="deal-actions">
+                        <button className="btn-secondary">View Details</button>
+                        {deal.status === 'active' && (
+                          <button className="btn-primary">Submit Work</button>
+                        )}
+                      </div>
                     </div>
-                    <div className="deal-details">
-                      <p><strong>Business:</strong> {deal.business_name}</p>
-                      <p><strong>Amount:</strong> ${deal.amount}</p>
-                      <p><strong>Deadline:</strong> {deal.deadline}</p>
-                    </div>
-                    <div className="deal-actions">
-                      <button className="btn-secondary">View Details</button>
-                      {deal.status === 'active' && (
-                        <button className="btn-primary">Submit Work</button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

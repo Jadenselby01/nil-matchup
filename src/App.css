@@ -8,135 +8,106 @@
 
 /* Landing Page Styles */
 .landing-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
   padding: 20px;
 }
 
 .landing-content {
-  max-width: 700px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 80px 60px;
-  border-radius: 24px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.landing-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  max-width: 600px;
 }
 
 .landing-title {
-  font-size: 4.5rem;
-  color: #ffffff;
+  font-size: 3.5rem;
+  font-weight: bold;
   margin-bottom: 16px;
-  font-weight: 800;
-  letter-spacing: -2px;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  position: relative;
-}
-
-.landing-title::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 3px;
-  background: linear-gradient(90deg, #64ffda, #00d4ff);
-  border-radius: 2px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .landing-subtitle {
-  font-size: 1.4rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.5rem;
   margin-bottom: 24px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  opacity: 0.9;
 }
 
 .landing-description {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 60px;
-  line-height: 1.7;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-bottom: 40px;
+  line-height: 1.6;
+  opacity: 0.8;
 }
 
 .landing-buttons {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .landing-btn {
-  padding: 18px 36px;
-  font-size: 1rem;
+  padding: 16px 32px;
+  font-size: 1.1rem;
   font-weight: 600;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  min-width: 200px;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.landing-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+.landing-btn.primary-btn {
+  background: #28a745;
+  color: white;
 }
 
-.landing-btn:hover::before {
-  left: 100%;
+.landing-btn.primary-btn:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
 }
 
-.primary-btn {
-  background: linear-gradient(135deg, #64ffda 0%, #00d4ff 100%);
-  color: #0a1929;
-  box-shadow: 0 8px 32px rgba(100, 255, 218, 0.3);
+.landing-btn.secondary-btn {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
 }
 
-.primary-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 48px rgba(100, 255, 218, 0.4);
+.landing-btn.secondary-btn:hover {
+  background: white;
+  color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
 }
 
-.secondary-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-}
-
-.secondary-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-3px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+/* Responsive Design */
+@media (max-width: 768px) {
+  .landing-title {
+    font-size: 2.5rem;
+  }
+  
+  .landing-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .landing-description {
+    font-size: 1rem;
+  }
+  
+  .landing-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .landing-btn {
+    width: 100%;
+    max-width: 300px;
+  }
 }
 
 /* Authentication Pages Styles */

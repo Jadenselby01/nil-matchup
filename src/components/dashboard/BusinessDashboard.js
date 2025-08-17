@@ -5,68 +5,28 @@ import './Dashboard.css';
 const BusinessDashboard = ({ onNavigate }) => {
   const { user, userProfile, signOut } = useAuth();
   const [deals, setDeals] = useState([]);
-  const [athletes, setAthletes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // Fetch business data
-    fetchBusinessData();
+    // Fetch business deals from the database
+    fetchBusinessDeals();
   }, []);
 
-  const fetchBusinessData = async () => {
+  const fetchBusinessDeals = async () => {
     try {
       setLoading(true);
-      
-      // Mock data for now - replace with real Supabase calls
-      const mockDeals = [
-        {
-          id: 'deal-1',
-          title: 'Social Media Campaign',
-          athlete_name: 'Michael Johnson',
-          athlete_sport: 'Football',
-          amount: 500,
-          status: 'active',
-          deadline: '2024-02-15',
-          created_at: '2024-01-15'
-        },
-        {
-          id: 'deal-2',
-          title: 'Product Endorsement',
-          athlete_name: 'Sarah Williams',
-          athlete_sport: 'Basketball',
-          amount: 800,
-          status: 'pending',
-          deadline: '2024-03-01',
-          created_at: '2024-01-20'
-        }
-      ];
+      // TODO: Replace with real API call to Supabase
+      // const { data, error } = await supabase
+      //   .from('deals')
+      //   .select('*')
+      //   .eq('business_id', user.id)
+      //   .order('created_at', { ascending: false });
 
-      const mockAthletes = [
-        {
-          id: 'athlete-1',
-          name: 'Michael Johnson',
-          sport: 'Football',
-          university: 'UNC Chapel Hill',
-          followers: 2500,
-          engagement_rate: 4.2,
-          image: 'https://via.placeholder.com/100x100/007bff/ffffff?text=MJ'
-        },
-        {
-          id: 'athlete-2',
-          name: 'Sarah Williams',
-          sport: 'Basketball',
-          university: 'Duke University',
-          followers: 3200,
-          engagement_rate: 5.1,
-          image: 'https://via.placeholder.com/100x100/28a745/ffffff?text=SW'
-        }
-      ];
-
-      setDeals(mockDeals);
-      setAthletes(mockAthletes);
+      // For now, show empty state
+      setDeals([]);
     } catch (error) {
-      console.error('Error fetching business data:', error);
+      console.error('Error fetching deals:', error);
     } finally {
       setLoading(false);
     }
@@ -195,29 +155,40 @@ const BusinessDashboard = ({ onNavigate }) => {
                 </button>
               </div>
               
-              <div className="deals-list">
-                {deals.map(deal => (
-                  <div key={deal.id} className="deal-card">
-                    <div className="deal-header">
-                      <h4>{deal.title}</h4>
-                      <span className={`status-badge ${getStatusColor(deal.status)}`}>
-                        {deal.status}
-                      </span>
+              {deals.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📋</div>
+                  <h4>No Deals Yet</h4>
+                  <p>You haven't created any deals yet. Start by creating your first NIL opportunity!</p>
+                  <button className="btn-primary" onClick={handleCreateDeal}>
+                    Create Your First Deal
+                  </button>
+                </div>
+              ) : (
+                <div className="deals-list">
+                  {deals.map(deal => (
+                    <div key={deal.id} className="deal-card">
+                      <div className="deal-header">
+                        <h4>{deal.title}</h4>
+                        <span className={`status-badge ${getStatusColor(deal.status)}`}>
+                          {deal.status}
+                        </span>
+                      </div>
+                      <div className="deal-details">
+                        <p><strong>Athlete:</strong> {deal.athlete_name || 'Unassigned'}</p>
+                        <p><strong>Amount:</strong> ${deal.amount}</p>
+                        <p><strong>Deadline:</strong> {deal.deadline}</p>
+                      </div>
+                      <div className="deal-actions">
+                        <button className="btn-secondary">View Details</button>
+                        {deal.status === 'open' && (
+                          <button className="btn-primary">Edit Deal</button>
+                        )}
+                      </div>
                     </div>
-                    <div className="deal-details">
-                      <p><strong>Athlete:</strong> {deal.athlete_name} ({deal.athlete_sport})</p>
-                      <p><strong>Amount:</strong> ${deal.amount}</p>
-                      <p><strong>Deadline:</strong> {deal.deadline}</p>
-                    </div>
-                    <div className="deal-actions">
-                      <button className="btn-secondary">View Details</button>
-                      {deal.status === 'pending' && (
-                        <button className="btn-primary">Review Work</button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -225,24 +196,8 @@ const BusinessDashboard = ({ onNavigate }) => {
             <div className="athletes-tab">
               <h3>Discover Athletes</h3>
               <div className="athletes-grid">
-                {athletes.map(athlete => (
-                  <div key={athlete.id} className="athlete-card">
-                    <img src={athlete.image} alt={athlete.name} className="athlete-image" />
-                    <div className="athlete-info">
-                      <h4>{athlete.name}</h4>
-                      <p className="athlete-sport">{athlete.sport}</p>
-                      <p className="athlete-university">{athlete.university}</p>
-                      <div className="athlete-stats">
-                        <span>{athlete.followers.toLocaleString()} followers</span>
-                        <span>{athlete.engagement_rate}% engagement</span>
-                      </div>
-                    </div>
-                    <div className="athlete-actions">
-                      <button className="btn-primary">View Profile</button>
-                      <button className="btn-secondary">Contact</button>
-                    </div>
-                  </div>
-                ))}
+                {/* Athletes data is not fetched, so this will be empty */}
+                <p>No athletes found. Please check back later or create a new deal.</p>
               </div>
             </div>
           )}
