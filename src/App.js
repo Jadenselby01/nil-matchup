@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import AuthService from './services/authService';
 import { SecurityProvider } from './contexts/SecurityContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Notification from './components/Notification';
 import MessagingPage from './MessagingPage';
 import PaymentPage from './PaymentPage';
@@ -11,6 +12,7 @@ import CreateProposalPage from './CreateProposalPage';
 import DealsPage from './DealsPage';
 import Footer from './components/Footer';
 import { PrivacyPolicy, TermsOfService, CookiePolicy } from './components/LegalPages';
+import AuthPage from './components/auth/AuthPage';
 
 // DropdownMenu Component
 const DropdownMenu = ({ onViewDocuments, onViewPolicies, onViewSettings }) => {
@@ -445,23 +447,19 @@ const OffersPage = ({ onBack, setCurrentPage }) => {
 function App() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'players', 'athlete-login', 'athlete-signup', 'business-login', 'business-signup', 'athlete-profile', 'business-profile', 'athlete-dashboard', 'business-dashboard', 'create-offer', 'offers', 'messaging', 'payment', 'payment-history'
-  const [userType, setUserType] = useState(''); // 'athlete' or 'business'
-  const [currentUser, setCurrentUser] = useState(null); // For messaging system
-  // const [paymentData, setPaymentData] = useState(null); // For payment processing
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentPage, setCurrentPage] = useState('landing');
+  const [userType, setUserType] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [showLegalDocuments, setShowLegalDocuments] = useState(false);
   const [showPolicies, setShowPolicies] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  // const [legalDocumentsCompleted, setLegalDocumentsCompleted] = useState(false);
   
   // UX Overhaul State Variables
   const [showSmartDealTemplates, setShowSmartDealTemplates] = useState(false);
   const [showAutoAdProofTool, setShowAutoAdProofTool] = useState(false);
   const [showMicroCoaching, setShowMicroCoaching] = useState(false);
   const [currentDeal, setCurrentDeal] = useState(null);
-  // const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState(null);
@@ -471,7 +469,6 @@ function App() {
     try {
       const savedUser = localStorage.getItem('currentUser');
       if (savedUser && savedUser.includes('[object Object]')) {
-        // Clear corrupted data
         localStorage.removeItem('currentUser');
         localStorage.removeItem('profileCompleted');
         localStorage.removeItem('isNewUser');
@@ -482,33 +479,36 @@ function App() {
     }
   }, []);
 
-  // Check for existing authentication and redirect to dashboard
-  useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser && currentPage === 'landing') {
-      try {
-        const user = JSON.parse(savedUser);
-        if (user && typeof user === 'object' && user.type) {
-          setCurrentUser(user);
-          setUserType(user.type);
-          // setIsAuthenticated(true);
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          // Check if user has completed profile
-          // const hasProfile = localStorage.getItem('profileCompleted');
-          
-          setCurrentPage(user.type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
-        } else {
-          // Invalid user data, clear it
-          localStorage.removeItem('currentUser');
-        }
-      } catch (error) {
-        // Invalid JSON, clear the corrupted data
-        console.error('Error parsing saved user data:', error);
-        localStorage.removeItem('currentUser');
-      }
-    }
-  }, [currentPage]);
+  // Handle authentication success
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    setUserType(user.user_type || 'athlete');
+    setCurrentPage(user.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+    
+    // Show success notification
+    setNotification({
+      message: `Welcome back, ${user.first_name || user.email}!`,
+      type: 'success',
+      duration: 3000
+    });
+  };
 
+  // Handle sign out
+  const handleSignOut = () => {
+    setCurrentUser(null);
+    setUserType('');
+    setCurrentPage('landing');
+    
+    // Clear any stored data
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('profileCompleted');
+    
+    setNotification({
+      message: 'You have been signed out successfully',
+      type: 'info',
+      duration: 3000
+    });
+  };
 
 
   // Sample athlete data
@@ -773,23 +773,16 @@ function App() {
         <div className="landing-buttons">
           <button 
             className="landing-btn primary-btn"
-            onClick={() => {
-              setUserType('athlete');
-              setCurrentPage('athlete-login');
-            }}
+            onClick={() => setCurrentPage('auth')}
           >
-            Athlete
+            Get Started
           </button>
           <button 
             className="landing-btn secondary-btn"
-            onClick={() => {
-              setUserType('business');
-              setCurrentPage('business-login');
-            }}
+            onClick={() => setCurrentPage('players')}
           >
-            Business
+            Explore Athletes
           </button>
-
         </div>
       </div>
     </div>
@@ -812,13 +805,7 @@ function App() {
         if (error) {
           setError(error.message);
         } else {
-          setCurrentUser(data.user);
-          // setIsAuthenticated(true);
-          localStorage.setItem('currentUser', JSON.stringify(data.user));
-          // Check if user has completed profile
-          // const hasProfile = localStorage.getItem('profileCompleted');
-          
-          setCurrentPage(type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+          handleAuthSuccess(data.user);
         }
       } catch (err) {
         setError('Login failed. Please try again.');
@@ -1381,17 +1368,6 @@ function App() {
 
   // Athlete Dashboard - View Businesses
   const AthleteDashboard = () => {
-    const handleLogout = async () => {
-      await AuthService.signOut();
-      setCurrentUser(null);
-      // setIsAuthenticated(false);
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('profileCompleted');
-      localStorage.removeItem('legalDocumentsCompleted');
-      localStorage.removeItem('isNewUser');
-      setCurrentPage('landing');
-    };
-
     return (
       <>
         <header className="App-header">
@@ -1405,7 +1381,7 @@ function App() {
               </button>
               <button 
                 className="logout-btn"
-                onClick={handleLogout}
+                onClick={handleSignOut}
               >
                 Logout
               </button>
@@ -1466,17 +1442,6 @@ function App() {
 
   // Business Dashboard - View Athletes
   const BusinessDashboard = () => {
-    const handleLogout = async () => {
-      await AuthService.signOut();
-      setCurrentUser(null);
-      // setIsAuthenticated(false);
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('profileCompleted');
-      localStorage.removeItem('legalDocumentsCompleted');
-      localStorage.removeItem('isNewUser');
-      setCurrentPage('landing');
-    };
-
     return (
       <>
         <header className="App-header">
@@ -1490,7 +1455,7 @@ function App() {
               </button>
               <button 
                 className="logout-btn"
-                onClick={handleLogout}
+                onClick={handleSignOut}
               >
                 Logout
               </button>
@@ -1587,16 +1552,7 @@ function App() {
               />
               <button 
                 className="logout-btn"
-                onClick={async () => {
-                  await AuthService.signOut();
-                  setCurrentUser(null);
-                  // setIsAuthenticated(false);
-                  localStorage.removeItem('currentUser');
-                  localStorage.removeItem('profileCompleted');
-                  localStorage.removeItem('legalDocumentsCompleted');
-                  localStorage.removeItem('isNewUser');
-                  setCurrentPage('landing');
-                }}
+                onClick={handleSignOut}
               >
                 Logout
               </button>
@@ -1686,6 +1642,8 @@ function App() {
     switch (currentPage) {
       case 'landing':
         return <LandingPage />;
+      case 'auth':
+        return <AuthPage onAuthSuccess={handleAuthSuccess} />;
       case 'players':
         return <PlayersPage />;
       case 'athlete-login':
@@ -1776,77 +1734,79 @@ function App() {
   };
 
   return (
-    <SecurityProvider>
-      <div className="App">
-        {renderPage()}
-        
-        <PlayerModal 
-          player={selectedPlayer} 
-          onClose={() => setSelectedPlayer(null)} 
-        />
-        
-        <BusinessModal 
-          business={selectedBusiness} 
-          onClose={() => setSelectedBusiness(null)} 
-        />
-
-
-
-        {/* Other Modals */}
-        {showLegalDocuments && (
-          <LegalDocumentsModal onClose={() => setShowLegalDocuments(false)} />
-        )}
-        
-        {showPolicies && (
-          <PoliciesModal onClose={() => setShowPolicies(false)} />
-        )}
-        
-        {showSettings && (
-          <SettingsModal 
-            onClose={() => setShowSettings(false)} 
-            currentUser={currentUser}
+    <AuthProvider>
+      <SecurityProvider>
+        <div className="App">
+          {renderPage()}
+          
+          <PlayerModal 
+            player={selectedPlayer} 
+            onClose={() => setSelectedPlayer(null)} 
           />
-        )}
-
-        {/* UX Overhaul Components */}
-
-        {showSmartDealTemplates && (
-          <SmartDealTemplates
-            onClose={() => setShowSmartDealTemplates(false)}
-            onTemplateCreated={handleTemplateCreated}
+          
+          <BusinessModal 
+            business={selectedBusiness} 
+            onClose={() => setSelectedBusiness(null)} 
           />
-        )}
 
-        {showAutoAdProofTool && (
-          <AutoAdProofTool
-            deal={null}
-            onVerificationComplete={handleAdProofComplete}
-            onClose={() => setShowAutoAdProofTool(false)}
-          />
-        )}
 
-        {showMicroCoaching && (
-          <MicroCoachingCarousel
-            onComplete={handleMicroCoachingComplete}
-            onClose={() => setShowMicroCoaching(false)}
-          />
-        )}
 
-        {/* Notification */}
-        {notification && (
-          <Notification
-            message={notification.message}
-            type={notification.type}
-            duration={notification.duration}
-            onClose={clearNotification}
-          />
-        )}
+          {/* Other Modals */}
+          {showLegalDocuments && (
+            <LegalDocumentsModal onClose={() => setShowLegalDocuments(false)} />
+          )}
+          
+          {showPolicies && (
+            <PoliciesModal onClose={() => setShowPolicies(false)} />
+          )}
+          
+          {showSettings && (
+            <SettingsModal 
+              onClose={() => setShowSettings(false)} 
+              currentUser={currentUser}
+            />
+          )}
 
-        {/* Footer */}
-        <Footer />
+          {/* UX Overhaul Components */}
 
-      </div>
-    </SecurityProvider>
+          {showSmartDealTemplates && (
+            <SmartDealTemplates
+              onClose={() => setShowSmartDealTemplates(false)}
+              onTemplateCreated={handleTemplateCreated}
+            />
+          )}
+
+          {showAutoAdProofTool && (
+            <AutoAdProofTool
+              deal={null}
+              onVerificationComplete={handleAdProofComplete}
+              onClose={() => setShowAutoAdProofTool(false)}
+            />
+          )}
+
+          {showMicroCoaching && (
+            <MicroCoachingCarousel
+              onComplete={handleMicroCoachingComplete}
+              onClose={() => setShowMicroCoaching(false)}
+            />
+          )}
+
+          {/* Notification */}
+          {notification && (
+            <Notification
+              message={notification.message}
+              type={notification.type}
+              duration={notification.duration}
+              onClose={clearNotification}
+            />
+          )}
+
+          {/* Footer */}
+          <Footer />
+
+        </div>
+      </SecurityProvider>
+    </AuthProvider>
   );
 }
 
