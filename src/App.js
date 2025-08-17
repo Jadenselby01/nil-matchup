@@ -13,6 +13,10 @@ import DealsPage from './DealsPage';
 import Footer from './components/Footer';
 import { PrivacyPolicy, TermsOfService, CookiePolicy } from './components/LegalPages';
 import AuthPage from './components/auth/AuthPage';
+import AthleteDashboard from './components/dashboard/AthleteDashboard';
+import BusinessDashboard from './components/dashboard/BusinessDashboard';
+import CreateDealForm from './components/deals/CreateDealForm';
+import DealDiscoveryPage from './components/deals/DealDiscoveryPage';
 
 // DropdownMenu Component
 const DropdownMenu = ({ onViewDocuments, onViewPolicies, onViewSettings }) => {
@@ -1656,9 +1660,30 @@ function App() {
         return <SignupPage type="business" />;
 
       case 'athlete-dashboard':
-        return <AthleteDashboard />;
+        return <AthleteDashboard onNavigate={setCurrentPage} />;
       case 'business-dashboard':
-        return <BusinessDashboard />;
+        return <BusinessDashboard onNavigate={setCurrentPage} />;
+      case 'create-deal':
+        return <CreateDealForm 
+          onDealCreated={(newDeal) => {
+            setCurrentDeal(newDeal);
+            setCurrentPage('business-dashboard');
+            setNotification({
+              message: '✅ Deal created successfully! Athletes can now discover and apply.',
+              type: 'success',
+              duration: 5000
+            });
+          }}
+          onCancel={() => setCurrentPage('business-dashboard')}
+        />;
+      case 'deal-discovery':
+        return <DealDiscoveryPage 
+          onBack={() => setCurrentPage('athlete-dashboard')}
+          onDealSelected={(deal) => {
+            setCurrentDeal(deal);
+            setCurrentPage('deal-details');
+          }}
+        />;
       case 'explore':
         return <ExplorePage />;
       case 'create-offer':
