@@ -4,6 +4,7 @@ import './App.css';
 
 // Import components
 import AuthPage from './components/auth/AuthPage';
+import RequireAuth from './components/RequireAuth';
 import AthleteDashboard from './components/dashboard/AthleteDashboard';
 import BusinessDashboard from './components/dashboard/BusinessDashboard';
 import CreateDealForm from './components/deals/CreateDealForm';
@@ -23,13 +24,13 @@ function App() {
   // Initialize authentication state
   useEffect(() => {
     console.log('App: Initializing authentication...');
-    
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         console.log('App: Initial session:', session);
-        
+
         if (session?.user) {
           setUser(session.user);
           await fetchUserProfile(session.user.id);
@@ -44,10 +45,11 @@ function App() {
     getInitialSession();
 
     // Listen for auth changes
+    console.log('App: Setting up auth state listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('App: Auth state change:', event, session);
-        
+
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           await fetchUserProfile(session.user.id);
@@ -56,7 +58,7 @@ function App() {
           setUserProfile(null);
           setCurrentPage('landing');
         }
-        
+
         setLoading(false);
       }
     );
@@ -68,9 +70,9 @@ function App() {
   const fetchUserProfile = async (userId) => {
     try {
       console.log('App: Fetching profile for user:', userId);
-      
+
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -90,23 +92,21 @@ function App() {
         console.log('App: Setting user profile:', data);
         setUserProfile(data);
         // Redirect to appropriate dashboard
-        setCurrentPage(data.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+        setCurrentPage(data.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
       }
     } catch (error) {
       console.error('App: Error in fetchUserProfile:', error);
     }
   };
 
-  // Handle authentication success
   const handleAuthSuccess = (user) => {
     setNotification({
-      message: `Welcome to NIL Matchup, ${user.first_name || user.email}!`,
+      message: `Welcome to NIL Matchup, ${user.user_metadata?.full_name || user.email}!`,
       type: 'success',
       duration: 3000
     });
   };
 
-  // Handle sign out
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -123,7 +123,6 @@ function App() {
     }
   };
 
-  // Show loading screen while checking authentication
   if (loading) {
     return (
       <div className="dashboard-loading">
@@ -133,7 +132,6 @@ function App() {
     );
   }
 
-  // Landing page component - redirects to auth if not logged in
   const LandingPage = () => (
     <div className="landing-page">
       <div className="landing-content">
@@ -142,15 +140,14 @@ function App() {
         <p className="landing-description">
           Connecting college athletes with local businesses for meaningful partnerships.
         </p>
-        
         <div className="landing-buttons">
-          <button 
+          <button
             className="landing-btn primary-btn"
             onClick={() => setCurrentPage('auth')}
           >
             Get Started
           </button>
-          <button 
+          <button
             className="landing-btn secondary-btn"
             onClick={() => setCurrentPage('auth')}
           >
@@ -161,7 +158,6 @@ function App() {
     </div>
   );
 
-  // Render different pages based on currentPage state
   const renderPage = () => {
     switch (currentPage) {
       case 'landing':
@@ -169,50 +165,78 @@ function App() {
       case 'auth':
         return <AuthPage onAuthSuccess={handleAuthSuccess} />;
       case 'athlete-dashboard':
-        return <AthleteDashboard onNavigate={setCurrentPage} onSignOut={handleSignOut} />;
+        return (
+          <RequireAuth>
+            <AthleteDashboard onNavigate={setCurrentPage} onSignOut={handleSignOut} />
+          </RequireAuth>
+        );
       case 'business-dashboard':
-        return <BusinessDashboard onNavigate={setCurrentPage} onSignOut={handleSignOut} />;
+        return (
+          <RequireAuth>
+            <BusinessDashboard onNavigate={setCurrentPage} onSignOut={handleSignOut} />
+          </RequireAuth>
+        );
       case 'create-deal':
-        return <CreateDealForm 
-          onDealCreated={(newDeal) => {
-            setCurrentDeal(newDeal);
-            setCurrentPage('business-dashboard');
-            setNotification({
-              message: '✅ Deal created successfully! Athletes can now discover and apply.',
-              type: 'success',
-              duration: 5000
-            });
-          }}
-          onCancel={() => setCurrentPage('business-dashboard')}
-        />;
+        return (
+          <RequireAuth>
+            <CreateDealForm
+              onDealCreated={(newDeal) => {
+                setCurrentDeal(newDeal);
+                setCurrentPage('business-dashboard');
+                setNotification({
+                  message: '✅ Deal created successfully! Athletes can now discover and apply.',
+                  type: 'success',
+                  duration: 5000
+                });
+              }}
+              onCancel={() => setCurrentPage('business-dashboard')}
+            />
+          </RequireAuth>
+        );
       case 'deal-discovery':
-        return <DealDiscoveryPage 
-          onBack={() => setCurrentPage('athlete-dashboard')}
-          onDealSelected={(deal) => {
-            setCurrentDeal(deal);
-            setCurrentPage('deal-details');
-          }}
-        />;
+        return (
+          <RequireAuth>
+            <DealDiscoveryPage
+              onBack={() => setCurrentPage('athlete-dashboard')}
+              onDealSelected={(deal) => {
+                setCurrentDeal(deal);
+                setCurrentPage('deal-details');
+              }}
+            />
+          </RequireAuth>
+        );
       case 'deals':
-        return <DealsPage 
-          currentUser={userProfile}
-          onBack={() => setCurrentPage(userProfile?.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
-        />;
+        return (
+          <RequireAuth>
+            <DealsPage
+              currentUser={userProfile}
+              onBack={() => setCurrentPage(userProfile?.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
+            />
+          </RequireAuth>
+        );
       case 'payment':
-        return <PaymentPage 
-          currentUser={userProfile}
-          onBack={() => setCurrentPage(userProfile?.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
-        />;
+        return (
+          <RequireAuth>
+            <PaymentPage
+              currentUser={userProfile}
+              onBack={() => setCurrentPage(userProfile?.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
+            />
+          </RequireAuth>
+        );
       case 'payment-processing':
-        return <PaymentProcessingPage 
-          dealId={currentDeal?.id}
-          onComplete={(completedDeal) => {
-            setCurrentDeal(completedDeal);
-            setCurrentPage(userProfile?.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
-            alert('✅ Payment processing completed! Your deal is now active.');
-          }}
-          onBack={() => setCurrentPage(userProfile?.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
-        />;
+        return (
+          <RequireAuth>
+            <PaymentProcessingPage
+              dealId={currentDeal?.id}
+              onComplete={(completedDeal) => {
+                setCurrentDeal(completedDeal);
+                setCurrentPage(userProfile?.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+                alert('✅ Payment processing completed! Your deal is now active.');
+              }}
+              onBack={() => setCurrentPage(userProfile?.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
+            />
+          </RequireAuth>
+        );
       default:
         return <LandingPage />;
     }
@@ -221,12 +245,11 @@ function App() {
   return (
     <div className="App">
       {renderPage()}
-      
-      {/* Notification */}
+
       {notification && (
         <div className={`notification ${notification.type}`}>
           {notification.message}
-          <button 
+          <button
             className="notification-close"
             onClick={() => setNotification(null)}
           >

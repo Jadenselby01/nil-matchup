@@ -74,6 +74,36 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
     return true;
   };
 
+  const createUserProfile = async (userId, email) => {
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      const role = formData.userType;
+      
+      const response = await fetch('/api/create-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          email: email,
+          full_name: fullName,
+          role: role
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create profile');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Profile creation error:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -82,16 +112,6 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
     setSuccess('');
 
     try {
-      const profileData = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        sport: formData.sport,
-        university: formData.university,
-        company_name: formData.companyName,
-        company_type: formData.companyType,
-        bio: formData.bio
-      };
-
       // Create user account
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -99,7 +119,13 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
         options: {
           data: {
             user_type: formData.userType,
-            ...profileData
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            sport: formData.sport,
+            university: formData.university,
+            company_name: formData.companyName,
+            company_type: formData.companyType,
+            bio: formData.bio
           }
         }
       });
@@ -111,26 +137,14 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
       }
 
       if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: data.user.id,
-            email: formData.email,
-            user_type: formData.userType,
-            first_name: profileData.first_name || '',
-            last_name: profileData.last_name || '',
-            sport: profileData.sport || '',
-            university: profileData.university || '',
-            company_name: profileData.company_name || '',
-            company_type: profileData.company_type || '',
-            bio: profileData.bio || '',
-            is_verified: false
-          });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
+        // Create user profile via API
+        try {
+          await createUserProfile(data.user.id, formData.email);
+        } catch (profileError) {
+          console.error('Profile creation failed:', profileError);
           // Don't fail the signup if profile creation fails
+          setError(`Account created but profile setup failed: ${profileError.message}. Please contact support.`);
+          return;
         }
 
         setSuccess('Account created successfully! Please check your email to verify your account.');
