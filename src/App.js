@@ -13,6 +13,9 @@ import DealsPage from './components/DealsPage';
 import PaymentPage from './components/PaymentPage';
 import PaymentProcessingPage from './components/PaymentProcessingPage';
 
+// Force deployment refresh - Vercel cache issue fix
+const APP_VERSION = '1.0.1-deploy-fix-' + Date.now();
+
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [currentDeal, setCurrentDeal] = useState(null);
@@ -30,7 +33,8 @@ function App() {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseKey,
       url: supabaseUrl,
-      key: supabaseKey ? `${supabaseKey.substring(0, 20)}...` : 'missing'
+      key: supabaseKey ? `${supabaseKey.substring(0, 20)}...` : 'missing',
+      version: APP_VERSION
     });
 
     if (!supabaseUrl || !supabaseKey) {
@@ -178,6 +182,7 @@ function App() {
         <div className="spinner"></div>
         <p>Loading...</p>
         <p className="loading-subtitle">Initializing NIL Matchup...</p>
+        <p className="loading-version">Version: {APP_VERSION}</p>
       </div>
     );
   }
@@ -204,6 +209,7 @@ function App() {
             Sign In
           </button>
         </div>
+        <p className="landing-version">Version: {APP_VERSION}</p>
       </div>
     </div>
   );
