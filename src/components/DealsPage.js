@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import './Deals.css';
 
 const DealsPage = ({ currentUser, onBack }) => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { userProfile } = useAuth();
 
   useEffect(() => {
-    // For now, show empty state since we're focusing on authentication
-    setLoading(false);
+    setLoading(false); // For now, show empty state
   }, []);
 
   if (loading) {
@@ -28,7 +25,7 @@ const DealsPage = ({ currentUser, onBack }) => {
         </button>
         <h1>My Deals</h1>
       </div>
-      
+
       <div className="deals-content">
         {deals.length === 0 ? (
           <div className="empty-state">

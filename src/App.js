@@ -17,7 +17,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [currentDeal, setCurrentDeal] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +31,6 @@ function App() {
         console.log('App: Initial session:', session);
 
         if (session?.user) {
-          setUser(session.user);
           await fetchUserProfile(session.user.id);
         }
       } catch (error) {
@@ -51,10 +49,8 @@ function App() {
         console.log('App: Auth state change:', event, session);
 
         if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user);
           await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
-          setUser(null);
           setUserProfile(null);
           setCurrentPage('landing');
         }
@@ -110,7 +106,6 @@ function App() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
       setUserProfile(null);
       setCurrentPage('landing');
       setNotification({

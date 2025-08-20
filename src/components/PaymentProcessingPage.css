@@ -1,76 +1,82 @@
-/* Payment Processing Page Styling */
+/* Payment Processing Page Styles */
 .payment-processing-page {
-  min-height: 100vh;
-  background: #f8f9fa;
   padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .processing-header {
   display: flex;
   align-items: center;
-  gap: 20px;
   margin-bottom: 30px;
+  gap: 20px;
+}
+
+.back-btn {
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back-btn:hover {
+  background: #e0e0e0;
 }
 
 .processing-header h1 {
-  color: #2c3e50;
   margin: 0;
-  font-size: 2rem;
-  font-weight: 700;
+  color: #333;
 }
 
 .processing-content {
-  max-width: 600px;
-  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   text-align: center;
 }
 
 .processing-status {
-  background: #ffffff;
-  padding: 60px 40px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .status-icon {
   font-size: 64px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   animation: pulse 2s infinite;
 }
 
 .processing-status h3 {
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 24px;
 }
 
 .processing-status p {
-  color: #6c757d;
-  margin: 0;
-  font-size: 1.1rem;
+  margin: 0 0 25px 0;
+  color: #666;
+  font-size: 16px;
   line-height: 1.5;
 }
 
-.back-btn {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 10px 20px;
+.deal-info {
+  background: #f8f9fa;
   border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
+  padding: 15px;
+  margin-top: 20px;
 }
 
-.back-btn:hover {
-  background: #5a6268;
+.deal-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 } 
