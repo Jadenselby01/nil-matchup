@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabaseClient';
 import './App.css';
 
 // Import components
@@ -12,41 +12,93 @@ import DealsPage from './components/DealsPage';
 import PaymentPage from './components/PaymentPage';
 import PaymentProcessingPage from './components/PaymentProcessingPage';
 
-// Main App Component
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [currentDeal, setCurrentDeal] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Get authentication context
-  const { user, userProfile, loading: authLoading } = useAuth();
-
-  // Redirect based on authentication status
+  // Initialize authentication state
   useEffect(() => {
-    console.log('App: Auth state changed:', { user, userProfile, authLoading });
+    console.log('App: Initializing authentication...');
     
-    if (!authLoading) {
-      if (user) {
-        console.log('App: User authenticated, checking profile...');
-        if (userProfile) {
-          console.log('App: Profile loaded, redirecting to dashboard');
-          // User is authenticated and profile is loaded, redirect to appropriate dashboard
-          setCurrentPage(userProfile.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
-        } else {
-          console.log('App: User authenticated but no profile, staying on current page');
-          // User is authenticated but profile not loaded yet, don't redirect
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('App: Initial session:', session);
+        
+        if (session?.user) {
+          setUser(session.user);
+          await fetchUserProfile(session.user.id);
         }
-      } else {
-        console.log('App: No user, redirecting to landing');
-        // User is not authenticated, stay on landing page
-        setCurrentPage('landing');
+      } catch (error) {
+        console.error('App: Error getting initial session:', error);
+      } finally {
+        setLoading(false);
       }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('App: Auth state change:', event, session);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user);
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setUserProfile(null);
+          setCurrentPage('landing');
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch user profile from database
+  const fetchUserProfile = async (userId) => {
+    try {
+      console.log('App: Fetching profile for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      console.log('App: Profile fetch result:', { data, error });
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('App: No profile found for user (this is normal for new users)');
+          return;
+        }
+        console.error('App: Error fetching user profile:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('App: Setting user profile:', data);
+        setUserProfile(data);
+        // Redirect to appropriate dashboard
+        setCurrentPage(data.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+      }
+    } catch (error) {
+      console.error('App: Error in fetchUserProfile:', error);
     }
-  }, [user, userProfile, authLoading]);
+  };
 
   // Handle authentication success
   const handleAuthSuccess = (user) => {
-    // This will be handled by the AuthContext automatically
     setNotification({
       message: `Welcome to NIL Matchup, ${user.first_name || user.email}!`,
       type: 'success',
@@ -55,18 +107,24 @@ function App() {
   };
 
   // Handle sign out
-  const handleSignOut = () => {
-    // This will be handled by the AuthContext automatically
-    setCurrentPage('landing');
-    setNotification({
-      message: 'You have been signed out successfully',
-      type: 'info',
-      duration: 3000
-    });
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setUserProfile(null);
+      setCurrentPage('landing');
+      setNotification({
+        message: 'You have been signed out successfully',
+        type: 'info',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('App: Error signing out:', error);
+    }
   };
 
   // Show loading screen while checking authentication
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="dashboard-loading">
         <div className="spinner"></div>
@@ -111,9 +169,9 @@ function App() {
       case 'auth':
         return <AuthPage onAuthSuccess={handleAuthSuccess} />;
       case 'athlete-dashboard':
-        return <AthleteDashboard onNavigate={setCurrentPage} />;
+        return <AthleteDashboard onNavigate={setCurrentPage} onSignOut={handleSignOut} />;
       case 'business-dashboard':
-        return <BusinessDashboard onNavigate={setCurrentPage} />;
+        return <BusinessDashboard onNavigate={setCurrentPage} onSignOut={handleSignOut} />;
       case 'create-deal':
         return <CreateDealForm 
           onDealCreated={(newDeal) => {
@@ -180,13 +238,4 @@ function App() {
   );
 }
 
-// Wrap App with AuthProvider
-function AppWrapper() {
-  return (
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  );
-}
-
-export default AppWrapper;
+export default App;
