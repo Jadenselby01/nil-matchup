@@ -19,9 +19,31 @@ function App() {
   const [notification, setNotification] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [configError, setConfigError] = useState(null);
+
+  // Check environment variables
+  useEffect(() => {
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    
+    console.log('Environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseKey,
+      url: supabaseUrl,
+      key: supabaseKey ? `${supabaseKey.substring(0, 20)}...` : 'missing'
+    });
+
+    if (!supabaseUrl || !supabaseKey) {
+      setConfigError('Missing Supabase configuration. Please check environment variables.');
+      setLoading(false);
+      return;
+    }
+  }, []);
 
   // Initialize authentication state
   useEffect(() => {
+    if (configError) return;
+
     console.log('App: Initializing authentication...');
 
     // Get initial session
@@ -35,6 +57,7 @@ function App() {
         }
       } catch (error) {
         console.error('App: Error getting initial session:', error);
+        setConfigError(`Authentication error: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -60,7 +83,7 @@ function App() {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [configError]);
 
   // Fetch user profile from database
   const fetchUserProfile = async (userId) => {
@@ -118,11 +141,43 @@ function App() {
     }
   };
 
+  // Show configuration error
+  if (configError) {
+    return (
+      <div className="config-error">
+        <h2>⚠️ Configuration Error</h2>
+        <p>{configError}</p>
+        <div className="config-details">
+          <h3>Environment Variables Check:</h3>
+          <ul>
+            <li><strong>REACT_APP_SUPABASE_URL:</strong> {process.env.REACT_APP_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</li>
+            <li><strong>REACT_APP_SUPABASE_ANON_KEY:</strong> {process.env.REACT_APP_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</li>
+          </ul>
+        </div>
+        <div className="config-help">
+          <h3>How to Fix:</h3>
+          <ol>
+            <li>Go to your Vercel project dashboard</li>
+            <li>Click "Settings" → "Environment Variables"</li>
+            <li>Add these variables:
+              <ul>
+                <li><code>REACT_APP_SUPABASE_URL</code> = your Supabase project URL</li>
+                <li><code>REACT_APP_SUPABASE_ANON_KEY</code> = your Supabase anon key</li>
+              </ul>
+            </li>
+            <li>Redeploy your project</li>
+          </ol>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="dashboard-loading">
         <div className="spinner"></div>
         <p>Loading...</p>
+        <p className="loading-subtitle">Initializing NIL Matchup...</p>
       </div>
     );
   }
