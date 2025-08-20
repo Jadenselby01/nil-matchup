@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import './AuthForms.css';
 
 const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
-  const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -31,7 +30,6 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
       ...prev,
       [field]: value
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -45,51 +43,40 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
       setError('Please fill in all required fields');
       return false;
     }
-
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
     }
-
     if (formData.password.length < 8) {
       setError('Password must be at least 8 characters long');
       return false;
     }
-
     if (!formData.agreeToTerms || !formData.agreeToPrivacy) {
       setError('Please agree to the terms and privacy policy');
       return false;
     }
-
     if (!recaptchaToken) {
       setError('Please complete the human verification');
       return false;
     }
-
-    // Validate athlete-specific fields
     if (formData.userType === 'athlete') {
       if (!formData.firstName || !formData.sport || !formData.university) {
         setError('Please fill in all athlete-specific fields');
         return false;
       }
     }
-
-    // Validate business-specific fields
     if (formData.userType === 'business') {
       if (!formData.companyName || !formData.companyType) {
         setError('Please fill in all business-specific fields');
         return false;
       }
     }
-
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-
     setLoading(true);
     setError('');
     setSuccess('');
@@ -105,42 +92,62 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
         bio: formData.bio
       };
 
-      const { data, error } = await signUp(
-        formData.email,
-        formData.password,
-        formData.userType,
-        profileData,
-        recaptchaToken
-      );
+      // Create user account
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            user_type: formData.userType,
+            ...profileData
+          }
+        }
+      });
 
-      if (error) {
-        setError(error.message);
-      } else {
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
+        setError(signUpError.message || 'Failed to create account. Please try again.');
+        return;
+      }
+
+      if (data.user) {
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: data.user.id,
+            email: formData.email,
+            user_type: formData.userType,
+            first_name: profileData.first_name || '',
+            last_name: profileData.last_name || '',
+            sport: profileData.sport || '',
+            university: profileData.university || '',
+            company_name: profileData.company_name || '',
+            company_type: profileData.company_type || '',
+            bio: profileData.bio || '',
+            is_verified: false
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          // Don't fail the signup if profile creation fails
+        }
+
         setSuccess('Account created successfully! Please check your email to verify your account.');
-        // Reset form
         setFormData({
-          email: '',
-          password: '',
-          confirmPassword: '',
-          userType: 'athlete',
-          firstName: '',
-          lastName: '',
-          sport: '',
-          university: '',
-          companyName: '',
-          companyType: '',
-          bio: '',
-          agreeToTerms: false,
-          agreeToPrivacy: false
+          email: '', password: '', confirmPassword: '', userType: 'athlete',
+          firstName: '', lastName: '', sport: '', university: '',
+          companyName: '', companyType: '', bio: '',
+          agreeToTerms: false, agreeToPrivacy: false
         });
         setRecaptchaToken(null);
         
-        // Call success callback if provided
         if (onAuthSuccess) {
           onAuthSuccess(data.user);
         }
       }
     } catch (err) {
+      console.error('Unexpected error during sign up:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -151,75 +158,38 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
     <div className="auth-form-container">
       <h2>Create Your Account</h2>
       <p className="auth-subtitle">Join NIL Matchup and start connecting!</p>
-
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
-
       <form onSubmit={handleSubmit} className="auth-form">
-        {/* User Type Selection */}
         <div className="form-group">
           <label>I am a:</label>
           <div className="user-type-selector">
             <label className="radio-label">
-              <input
-                type="radio"
-                name="userType"
-                value="athlete"
-                checked={formData.userType === 'athlete'}
-                onChange={(e) => handleInputChange('userType', e.target.value)}
-              />
-              <span className="radio-custom"></span>
-              Athlete
+              <input type="radio" name="userType" value="athlete" checked={formData.userType === 'athlete'} onChange={(e) => handleInputChange('userType', e.target.value)} />
+              <span className="radio-custom"></span> Athlete
             </label>
             <label className="radio-label">
-              <input
-                type="radio"
-                name="userType"
-                value="business"
-                checked={formData.userType === 'business'}
-                onChange={(e) => handleInputChange('userType', e.target.value)}
-              />
-              <span className="radio-custom"></span>
-              Business
+              <input type="radio" name="userType" value="business" checked={formData.userType === 'business'} onChange={(e) => handleInputChange('userType', e.target.value)} />
+              <span className="radio-custom"></span> Business
             </label>
           </div>
         </div>
-
-        {/* Basic Information */}
         <div className="form-row">
           <div className="form-group">
             <label>First Name *</label>
-            <input
-              type="text"
-              value={formData.firstName}
-              onChange={(e) => handleInputChange('firstName', e.target.value)}
-              placeholder="Enter your first name"
-              required
-            />
+            <input type="text" value={formData.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)} placeholder="Enter your first name" required />
           </div>
           <div className="form-group">
             <label>Last Name *</label>
-            <input
-              type="text"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
-              placeholder="Enter your last name"
-              required
-            />
+            <input type="text" value={formData.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)} placeholder="Enter your last name" required />
           </div>
         </div>
-
-        {/* Athlete-specific fields */}
         {formData.userType === 'athlete' && (
           <>
             <div className="form-row">
               <div className="form-group">
                 <label>Sport *</label>
-                <select
-                  value={formData.sport}
-                  onChange={(e) => handleInputChange('sport', e.target.value)}
-                  required
-                >
+                <select value={formData.sport} onChange={(e) => handleInputChange('sport', e.target.value)} required>
                   <option value="">Select your sport</option>
                   <option value="Football">Football</option>
                   <option value="Basketball">Basketball</option>
@@ -235,39 +205,21 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
               </div>
               <div className="form-group">
                 <label>University *</label>
-                <input
-                  type="text"
-                  value={formData.university}
-                  onChange={(e) => handleInputChange('university', e.target.value)}
-                  placeholder="Enter your university"
-                  required
-                />
+                <input type="text" value={formData.university} onChange={(e) => handleInputChange('university', e.target.value)} placeholder="Enter your university" required />
               </div>
             </div>
           </>
         )}
-
-        {/* Business-specific fields */}
         {formData.userType === 'business' && (
           <>
             <div className="form-row">
               <div className="form-group">
                 <label>Company Name *</label>
-                <input
-                  type="text"
-                  value={formData.companyName}
-                  onChange={(e) => handleInputChange('companyName', e.target.value)}
-                  placeholder="Enter your company name"
-                  required
-                />
+                <input type="text" value={formData.companyName} onChange={(e) => handleInputChange('companyName', e.target.value)} placeholder="Enter your company name" required />
               </div>
               <div className="form-group">
                 <label>Company Type *</label>
-                <select
-                  value={formData.companyType}
-                  onChange={(e) => handleInputChange('companyType', e.target.value)}
-                  required
-                >
+                <select value={formData.companyType} onChange={(e) => handleInputChange('companyType', e.target.value)} required>
                   <option value="">Select company type</option>
                   <option value="Restaurant">Restaurant</option>
                   <option value="Retail">Retail</option>
@@ -282,54 +234,24 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
             </div>
           </>
         )}
-
-        {/* Bio */}
         <div className="form-group">
           <label>Bio</label>
-          <textarea
-            value={formData.bio}
-            onChange={(e) => handleInputChange('bio', e.target.value)}
-            placeholder={`Tell us about yourself as a ${formData.userType}...`}
-            rows="3"
-          />
+          <textarea value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)} placeholder={`Tell us about yourself as a ${formData.userType}...`} rows="3" />
         </div>
-
-        {/* Account Information */}
         <div className="form-group">
           <label>Email Address *</label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder="Enter your email address"
-            required
-          />
+          <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="Enter your email address" required />
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label>Password *</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              placeholder="Create a password (min. 8 characters)"
-              required
-            />
+            <input type="password" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder="Create a password (min. 8 characters)" required />
           </div>
           <div className="form-group">
             <label>Confirm Password *</label>
-            <input
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-              placeholder="Confirm your password"
-              required
-            />
+            <input type="password" value={formData.confirmPassword} onChange={(e) => handleInputChange('confirmPassword', e.target.value)} placeholder="Confirm your password" required />
           </div>
         </div>
-
-        {/* Human Verification */}
         <div className="form-group">
           <label>Human Verification *</label>
           <ReCAPTCHA
@@ -338,53 +260,27 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
             theme="light"
           />
         </div>
-
-        {/* Terms and Privacy */}
         <div className="form-group">
           <div className="checkbox-group">
             <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={formData.agreeToTerms}
-                onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
-                required
-              />
-              <span className="checkbox-custom"></span>
-              I agree to the <a href="/terms" target="_blank">Terms of Service</a> *
+              <input type="checkbox" checked={formData.agreeToTerms} onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)} required />
+              <span className="checkbox-custom"></span> I agree to the <a href="/terms" target="_blank">Terms of Service</a> *
             </label>
           </div>
           <div className="checkbox-group">
             <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={formData.agreeToPrivacy}
-                onChange={(e) => handleInputChange('agreeToPrivacy', e.target.checked)}
-                required
-              />
-              <span className="checkbox-custom"></span>
-              I agree to the <a href="/privacy" target="_blank">Privacy Policy</a> *
+              <input type="checkbox" checked={formData.agreeToPrivacy} onChange={(e) => handleInputChange('agreeToPrivacy', e.target.checked)} required />
+              <span className="checkbox-custom"></span> I agree to the <a href="/privacy" target="_blank">Privacy Policy</a> *
             </label>
           </div>
         </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="auth-btn primary-btn"
-          disabled={loading}
-        >
+        <button type="submit" className="auth-btn primary-btn" disabled={loading}>
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
-
-      {/* Switch to Login */}
       <div className="auth-footer">
         <p>Already have an account? 
-          <button
-            type="button"
-            className="link-btn"
-            onClick={onSwitchToLogin}
-          >
+          <button type="button" className="link-btn" onClick={onSwitchToLogin}>
             Sign In
           </button>
         </p>

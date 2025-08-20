@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import './AuthForms.css';
 
 const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
-  const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -17,7 +16,6 @@ const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
       ...prev,
       [field]: value
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -26,12 +24,10 @@ const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
       setError('Please fill in all fields');
       return false;
     }
-
     if (!formData.email.includes('@')) {
       setError('Please enter a valid email address');
       return false;
     }
-
     return true;
   };
 
@@ -46,33 +42,32 @@ const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
     try {
       console.log('Attempting to sign in with:', { email: formData.email, password: formData.password });
       
-      const { data, error } = await signIn(
-        formData.email,
-        formData.password,
-        formData.rememberMe
-      );
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
 
-      console.log('Sign in result:', { data, error });
+      console.log('Sign in result:', { data, error: signInError });
 
-      if (error) {
-        console.error('Sign in error:', error);
+      if (signInError) {
+        console.error('Sign in error:', signInError);
         
         // Show user-friendly error messages
         let errorMessage = 'Sign in failed. ';
-        if (error.message.includes('Invalid login credentials')) {
+        if (signInError.message.includes('Invalid login credentials')) {
           errorMessage += 'Please check your email and password.';
-        } else if (error.message.includes('Email not confirmed')) {
+        } else if (signInError.message.includes('Email not confirmed')) {
           errorMessage += 'Please check your email and confirm your account.';
-        } else if (error.message.includes('Supabase configuration missing')) {
-          errorMessage += 'System configuration error. Please contact support.';
+        } else if (signInError.message.includes('Too many requests')) {
+          errorMessage += 'Too many login attempts. Please try again later.';
         } else {
-          errorMessage += error.message || 'Please try again.';
+          errorMessage += signInError.message || 'Please try again.';
         }
         
         setError(errorMessage);
       } else if (data && data.user) {
         console.log('Sign in successful:', data);
-        // Success - user will be automatically redirected by AuthContext
+        // Success - user will be automatically redirected by App.js
         if (onAuthSuccess) {
           onAuthSuccess(data.user);
         }
