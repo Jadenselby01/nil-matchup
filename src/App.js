@@ -23,11 +23,21 @@ function App() {
 
   // Redirect based on authentication status
   useEffect(() => {
+    console.log('App: Auth state changed:', { user, userProfile, authLoading });
+    
     if (!authLoading) {
-      if (user && userProfile) {
-        // User is authenticated, redirect to appropriate dashboard
-        setCurrentPage(userProfile.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+      if (user) {
+        console.log('App: User authenticated, checking profile...');
+        if (userProfile) {
+          console.log('App: Profile loaded, redirecting to dashboard');
+          // User is authenticated and profile is loaded, redirect to appropriate dashboard
+          setCurrentPage(userProfile.user_type === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+        } else {
+          console.log('App: User authenticated but no profile, staying on current page');
+          // User is authenticated but profile not loaded yet, don't redirect
+        }
       } else {
+        console.log('App: No user, redirecting to landing');
         // User is not authenticated, stay on landing page
         setCurrentPage('landing');
       }

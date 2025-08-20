@@ -22,18 +22,30 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize authentication state
   useEffect(() => {
+    console.log('AuthContext: Initializing...');
+    console.log('AuthContext: Environment variables loaded:', {
+      url: process.env.REACT_APP_SUPABASE_URL,
+      keyExists: !!process.env.REACT_APP_SUPABASE_ANON_KEY
+    });
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('AuthContext: Getting initial session...');
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('AuthContext: Initial session result:', initialSession);
+        
         setSession(initialSession);
         setUser(initialSession?.user || null);
         
         if (initialSession?.user) {
+          console.log('AuthContext: User found in session, fetching profile...');
           await fetchUserProfile(initialSession.user.id);
+        } else {
+          console.log('AuthContext: No user in initial session');
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('AuthContext: Error getting initial session:', error);
       } finally {
         setLoading(false);
       }
@@ -42,14 +54,19 @@ export const AuthProvider = ({ children }) => {
     getInitialSession();
 
     // Listen for auth changes
+    console.log('AuthContext: Setting up auth state listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthContext: Auth state change event:', event, session);
+        
         setSession(session);
         setUser(session?.user || null);
         
         if (session?.user) {
+          console.log('AuthContext: User authenticated, fetching profile...');
           await fetchUserProfile(session.user.id);
         } else {
+          console.log('AuthContext: User signed out, clearing profile');
           setUserProfile(null);
         }
         
@@ -57,28 +74,40 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('AuthContext: Cleaning up subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Fetch user profile from database
   const fetchUserProfile = async (userId) => {
     try {
+      console.log('AuthContext: Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', error);
+      console.log('AuthContext: Profile fetch result:', { data, error });
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('AuthContext: No profile found for user (this is normal for new users)');
+          return;
+        }
+        console.error('AuthContext: Error fetching user profile:', error);
         return;
       }
 
       if (data) {
+        console.log('AuthContext: Setting user profile:', data);
         setUserProfile(data);
       }
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('AuthContext: Error in fetchUserProfile:', error);
     }
   };
 
@@ -159,6 +188,15 @@ export const AuthProvider = ({ children }) => {
 
       if (!data.session) {
         throw new Error('No session returned from Supabase');
+      }
+
+      // Set the user and session immediately
+      setUser(data.user);
+      setSession(data.session);
+      
+      // Fetch the user profile
+      if (data.user) {
+        await fetchUserProfile(data.user.id);
       }
 
       // Set session persistence based on remember me
