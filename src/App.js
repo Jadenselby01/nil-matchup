@@ -23,26 +23,61 @@ function App() {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [configError, setConfigError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState({});
 
   // Check environment variables
   useEffect(() => {
     const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
     const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
     
-    console.log('Environment check:', {
+    const envCheck = {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseKey,
       url: supabaseUrl,
       key: supabaseKey ? `${supabaseKey.substring(0, 20)}...` : 'missing',
       version: APP_VERSION
-    });
+    };
+    
+    console.log('Environment check:', envCheck);
+    setDebugInfo(envCheck);
 
     if (!supabaseUrl || !supabaseKey) {
       setConfigError('Missing Supabase configuration. Please check environment variables.');
       setLoading(false);
       return;
     }
+
+    // Test Supabase connection
+    testSupabaseConnection();
   }, []);
+
+  // Test if Supabase is actually working
+  const testSupabaseConnection = async () => {
+    try {
+      console.log('Testing Supabase connection...');
+      
+      // Test 1: Basic client creation
+      console.log('Supabase client created:', !!supabase);
+      
+      // Test 2: Try to get session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('Session test result:', { sessionData, sessionError });
+      
+      if (sessionError) {
+        console.error('Supabase session error:', sessionError);
+        setConfigError(`Supabase connection failed: ${sessionError.message}`);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('✅ Supabase connection successful!');
+      
+    } catch (error) {
+      console.error('Supabase connection test failed:', error);
+      setConfigError(`Supabase connection test failed: ${error.message}`);
+      setLoading(false);
+    }
+  };
 
   // Initialize authentication state
   useEffect(() => {
@@ -53,11 +88,23 @@ function App() {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('App: Initial session:', session);
+        console.log('Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('App: Initial session result:', { session, error });
+
+        if (error) {
+          console.error('Session error:', error);
+          setConfigError(`Session error: ${error.message}`);
+          setLoading(false);
+          return;
+        }
 
         if (session?.user) {
+          console.log('User is logged in:', session.user);
           await fetchUserProfile(session.user.id);
+        } else {
+          console.log('No active session, showing landing page');
+          setCurrentPage('landing');
         }
       } catch (error) {
         console.error('App: Error getting initial session:', error);
@@ -105,9 +152,11 @@ function App() {
       if (error) {
         if (error.code === 'PGRST116') {
           console.log('App: No profile found for user (this is normal for new users)');
+          setCurrentPage('landing');
           return;
         }
         console.error('App: Error fetching user profile:', error);
+        setConfigError(`Profile fetch error: ${error.message}`);
         return;
       }
 
@@ -119,6 +168,7 @@ function App() {
       }
     } catch (error) {
       console.error('App: Error in fetchUserProfile:', error);
+      setConfigError(`Profile error: ${error.message}`);
     }
   };
 
@@ -158,6 +208,10 @@ function App() {
             <li><strong>REACT_APP_SUPABASE_ANON_KEY:</strong> {process.env.REACT_APP_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</li>
           </ul>
         </div>
+        <div className="debug-info">
+          <h3>Debug Information:</h3>
+          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        </div>
         <div className="config-help">
           <h3>How to Fix:</h3>
           <ol>
@@ -183,6 +237,11 @@ function App() {
         <p>Loading...</p>
         <p className="loading-subtitle">Initializing NIL Matchup...</p>
         <p className="loading-version">Version: {APP_VERSION}</p>
+        <div className="loading-debug">
+          <p>Debug: Checking Supabase connection...</p>
+          <p>URL: {process.env.REACT_APP_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</p>
+          <p>Key: {process.env.REACT_APP_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</p>
+        </div>
       </div>
     );
   }

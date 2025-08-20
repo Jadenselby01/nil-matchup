@@ -131,6 +131,23 @@
   border-radius: 4px;
 }
 
+.loading-debug {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  text-align: left;
+  max-width: 400px;
+}
+
+.loading-debug p {
+  margin: 5px 0;
+  font-size: 12px;
+  font-family: monospace;
+  color: #666;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -188,6 +205,29 @@
 
 .config-details li:last-child {
   border-bottom: none;
+}
+
+.debug-info {
+  background: #fff3cd;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border-left: 4px solid #ffc107;
+}
+
+.debug-info h3 {
+  margin: 0 0 15px 0;
+  color: #856404;
+  font-size: 1.2rem;
+}
+
+.debug-info pre {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 0;
 }
 
 .config-help {
@@ -313,6 +353,11 @@
   .notification {
     right: 10px;
     left: 10px;
+    max-width: none;
+  }
+  
+  .loading-debug {
+    margin: 20px;
     max-width: none;
   }
 } 
