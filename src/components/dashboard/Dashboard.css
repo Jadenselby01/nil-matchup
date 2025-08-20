@@ -1,262 +1,217 @@
 /* Dashboard Layout */
-.dashboard {
+.dashboard-container {
   min-height: 100vh;
   background: #f8f9fa;
+  color: #2c3e50;
 }
 
-.dashboard-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: #f8f9fa;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e3e6ea;
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Dashboard Header */
 .dashboard-header {
-  background: white;
+  background: #ffffff;
+  padding: 20px 30px;
   border-bottom: 1px solid #e9ecef;
-  padding: 20px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dashboard-header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.dashboard-header h1 {
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.user-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.user-avatar.business {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-}
-
-.user-details h1 {
-  margin: 0 0 5px 0;
-  font-size: 1.8rem;
-  color: #333;
-}
-
-.user-details p {
+.dashboard-header p {
+  color: #7f8c8d;
   margin: 0;
-  color: #666;
   font-size: 1rem;
 }
 
-.sign-out-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
-}
-
-.sign-out-btn:hover {
-  background: #c82333;
-}
-
-/* Dashboard Navigation */
-.dashboard-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.dashboard-nav {
+.dashboard-actions {
   display: flex;
-  gap: 10px;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.dashboard-actions.centered {
+  justify-content: center;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  gap: 5px;
   margin-bottom: 30px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 2px solid #e9ecef;
+  padding: 0;
 }
 
 .nav-tab {
   background: none;
   border: none;
-  padding: 15px 25px;
+  padding: 12px 24px;
   cursor: pointer;
-  font-size: 1rem;
-  color: #666;
+  color: #7f8c8d;
+  font-weight: 500;
   border-bottom: 3px solid transparent;
   transition: all 0.3s ease;
+  font-size: 1rem;
 }
 
 .nav-tab:hover {
-  color: #333;
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
 }
 
 .nav-tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #3498db;
+  border-bottom-color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
 }
 
-/* Dashboard Main Content */
+/* Main Content */
 .dashboard-main {
-  background: white;
-  border-radius: 12px;
   padding: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Overview Tab */
-.overview-tab {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
+/* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
+  margin-bottom: 40px;
 }
 
 .stat-card {
-  background: #f8f9fa;
-  padding: 25px;
+  background: #ffffff;
+  padding: 24px;
   border-radius: 12px;
-  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #e9ecef;
+  text-align: center;
 }
 
 .stat-card h3 {
-  margin: 0 0 15px 0;
-  color: #666;
+  color: #7f8c8d;
+  margin: 0 0 12px 0;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-number {
-  margin: 0;
+  color: #2c3e50;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #667eea;
+  margin: 0;
+}
+
+/* Recent Activity */
+.recent-activity {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
 }
 
 .recent-activity h3 {
+  color: #2c3e50;
   margin: 0 0 20px 0;
-  color: #333;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
 }
 
 .activity-item {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 15px;
+  gap: 16px;
+  padding: 16px;
   background: #f8f9fa;
   border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
 .activity-icon {
   font-size: 1.5rem;
+  color: #3498db;
 }
 
 .activity-content p {
-  margin: 0 0 5px 0;
-  color: #333;
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 500;
 }
 
 .activity-content small {
-  color: #666;
-  font-size: 0.9rem;
+  color: #7f8c8d;
+  font-size: 0.875rem;
 }
 
-/* Deals Tab */
+/* Deals Section */
 .deals-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .deals-header h3 {
+  color: #2c3e50;
   margin: 0;
-  color: #333;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .deals-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 20px;
 }
 
 .deal-card {
-  border: 1px solid #e9ecef;
+  background: #ffffff;
+  padding: 24px;
   border-radius: 12px;
-  padding: 20px;
-  transition: box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .deal-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .deal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
 .deal-header h4 {
+  color: #2c3e50;
   margin: 0;
-  color: #333;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  flex: 1;
 }
 
 .status-badge {
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 12px;
 }
 
 .status-active {
@@ -285,189 +240,166 @@
 
 .deal-details p {
   margin: 0 0 8px 0;
-  color: #666;
+  color: #2c3e50;
+  font-size: 0.9rem;
 }
 
 .deal-details strong {
-  color: #333;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .deal-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* Athletes Tab */
+/* Buttons */
+.btn-primary,
+.btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* Athletes Grid */
 .athletes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
+  margin-bottom: 24px;
 }
 
 .athlete-card {
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  background: #ffffff;
   padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.athlete-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .athlete-image {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin-bottom: 15px;
+  margin: 0 auto 16px;
+  object-fit: cover;
 }
 
 .athlete-info h4 {
-  margin: 0 0 5px 0;
-  color: #333;
-  font-size: 1.2rem;
-}
-
-.athlete-sport {
-  margin: 0 0 5px 0;
-  color: #667eea;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
+.athlete-sport,
 .athlete-university {
-  margin: 0 0 15px 0;
-  color: #666;
-  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin: 0 0 4px 0;
+  font-size: 0.875rem;
 }
 
 .athlete-stats {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-  font-size: 0.9rem;
-  color: #666;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.athlete-stats span {
+  color: #7f8c8d;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .athlete-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  margin-top: 16px;
   justify-content: center;
 }
 
-/* Create Deal Tab */
-.create-deal-form {
+/* Profile Tab */
+.profile-tab {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.profile-tab h3 {
+  color: #2c3e50;
+  margin: 0 0 24px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.profile-form {
+  display: grid;
+  gap: 20px;
   max-width: 600px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #333;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-/* Buttons */
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
+  color: #2c3e50;
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-}
-
-.btn-secondary {
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
 }
 
-.btn-secondary:hover {
-  background: #667eea;
-  color: white;
+.form-group input {
+  padding: 12px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #2c3e50;
+  background: #ffffff;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .dashboard-header-content {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-  }
-  
-  .dashboard-nav {
-    flex-wrap: wrap;
-  }
-  
-  .nav-tab {
-    flex: 1;
-    min-width: 120px;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .athletes-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .deal-actions {
-    flex-direction: column;
-  }
-  
-  .athlete-actions {
-    flex-direction: column;
-  }
-} 
+.form-group input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group input[readonly] {
+  background: #f8f9fa;
+  color: #6c757d;
+}
 
 /* Empty State Styling */
 .empty-state {
@@ -476,18 +408,21 @@
   background: #f8f9fa;
   border-radius: 12px;
   margin: 20px 0;
+  border: 2px dashed #dee2e6;
 }
 
 .empty-icon {
   font-size: 48px;
   margin-bottom: 16px;
   opacity: 0.6;
+  color: #6c757d;
 }
 
 .empty-state h4 {
   color: #495057;
   margin-bottom: 12px;
   font-size: 20px;
+  font-weight: 600;
 }
 
 .empty-state p {
@@ -502,4 +437,67 @@
 .empty-state .btn-primary {
   padding: 12px 24px;
   font-size: 16px;
+}
+
+/* Loading State */
+.dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e9ecef;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dashboard-loading p {
+  color: #6c757d;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 20px;
+  }
+  
+  .dashboard-main {
+    padding: 20px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .deals-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .athletes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .nav-tab {
+    flex: 1;
+    min-width: 120px;
+  }
 } 

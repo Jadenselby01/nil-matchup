@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   color: white;
   text-align: center;
   padding: 20px;
@@ -20,6 +20,11 @@
 
 .landing-content {
   max-width: 600px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 60px 40px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .landing-title {
@@ -27,12 +32,14 @@
   font-weight: bold;
   margin-bottom: 16px;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  color: #ffffff;
 }
 
 .landing-subtitle {
   font-size: 1.5rem;
   margin-bottom: 24px;
   opacity: 0.9;
+  color: #ffffff;
 }
 
 .landing-description {
@@ -40,6 +47,7 @@
   margin-bottom: 40px;
   line-height: 1.6;
   opacity: 0.8;
+  color: #ffffff;
 }
 
 .landing-buttons {
@@ -64,12 +72,13 @@
 .landing-btn.primary-btn {
   background: #28a745;
   color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 .landing-btn.primary-btn:hover {
   background: #218838;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
 }
 
 .landing-btn.secondary-btn {
@@ -80,7 +89,7 @@
 
 .landing-btn.secondary-btn:hover {
   background: white;
-  color: #667eea;
+  color: #1e3c72;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
 }
