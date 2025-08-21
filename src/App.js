@@ -204,41 +204,50 @@ function App() {
       const { data: { user } } = await supabase.auth.getUser();
       const userMetadata = user?.user_metadata || {};
       
-      // Create minimal profile data with only required columns
-      const profileData = {
+      // Try to create profile with role first
+      let profileData = {
         id: userId,
         email: user?.email || '',
-        full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User'
-        // Note: role column will be added by the database with default value
+        full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User',
+        role: userMetadata.user_type || 'athlete'
       };
 
-      console.log('App: Creating profile with data:', profileData);
+      console.log('App: Attempting to create profile with role:', profileData);
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('profiles')
         .insert(profileData)
         .select()
         .single();
 
+      // If role column doesn't exist, try without it
+      if (error && (error.message.includes('role') || error.message.includes('schema cache'))) {
+        console.log('App: Role column missing, creating profile without role...');
+        
+        profileData = {
+          id: userId,
+          email: user?.email || '',
+          full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User'
+        };
+
+        ({ data, error } = await supabase
+          .from('profiles')
+          .insert(profileData)
+          .select()
+          .single());
+      }
+
       if (error) {
         console.error('App: Error creating profile:', error);
-        
-        // Check if it's a missing column error
-        if (error.message.includes('role') || error.message.includes('schema cache')) {
-          setConfigError(
-            'Database schema issue: Missing required columns. Please run the database fix script in Supabase SQL Editor.'
-          );
-        } else {
-          setConfigError(`Failed to create profile: ${error.message}`);
-        }
+        setConfigError(`Failed to create profile: ${error.message}. Please fix your database schema.`);
         return;
       }
 
       console.log('App: Profile created successfully:', data);
       setUserProfile(data);
       
-      // Try to redirect to dashboard, fallback to landing if role is missing
-      const userRole = data.role || 'athlete'; // Default to athlete if role is missing
+      // Redirect to dashboard - default to athlete if role is missing
+      const userRole = data.role || 'athlete';
       setCurrentPage(userRole === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
       
     } catch (error) {
@@ -393,7 +402,7 @@ WHERE role IS NULL;`}</pre>
         {userProfile && (
           <div className="debug-dashboard-access">
             <p>✅ You're logged in as: {userProfile.email}</p>
-            <p>Role: {userProfile.role}</p>
+            <p>Role: {userProfile.role || 'athlete (default)'}</p>
             <button
               className="landing-btn primary-btn"
               onClick={() => setCurrentPage(userProfile.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
@@ -402,6 +411,25 @@ WHERE role IS NULL;`}</pre>
             </button>
           </div>
         )}
+        
+        {/* Database Setup Button */}
+        <div className="database-setup">
+          <p>Having login issues? Set up your database:</p>
+          <button
+            className="landing-btn secondary-btn"
+            onClick={() => {
+              window.open('https://supabase.com/dashboard', '_blank');
+            }}
+          >
+            Fix Database Schema
+          </button>
+          <p className="setup-instructions">
+            Click the button above, then run this SQL in your Supabase SQL Editor:
+          </p>
+          <div className="sql-quick-fix">
+            <code>ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'athlete';</code>
+          </div>
+        </div>
         
         <p className="landing-version">Version: {APP_VERSION}</p>
       </div>
