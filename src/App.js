@@ -204,12 +204,12 @@ function App() {
       const { data: { user } } = await supabase.auth.getUser();
       const userMetadata = user?.user_metadata || {};
       
+      // Create minimal profile data with only required columns
       const profileData = {
         id: userId,
         email: user?.email || '',
-        full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User',
-        role: userMetadata.user_type || 'athlete', // Default to athlete
-        created_at: new Date().toISOString()
+        full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User'
+        // Note: role column will be added by the database with default value
       };
 
       console.log('App: Creating profile with data:', profileData);
@@ -222,13 +222,24 @@ function App() {
 
       if (error) {
         console.error('App: Error creating profile:', error);
-        setConfigError(`Failed to create profile: ${error.message}`);
+        
+        // Check if it's a missing column error
+        if (error.message.includes('role') || error.message.includes('schema cache')) {
+          setConfigError(
+            'Database schema issue: Missing required columns. Please run the database fix script in Supabase SQL Editor.'
+          );
+        } else {
+          setConfigError(`Failed to create profile: ${error.message}`);
+        }
         return;
       }
 
       console.log('App: Profile created successfully:', data);
       setUserProfile(data);
-      setCurrentPage(data.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+      
+      // Try to redirect to dashboard, fallback to landing if role is missing
+      const userRole = data.role || 'athlete'; // Default to athlete if role is missing
+      setCurrentPage(userRole === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
       
     } catch (error) {
       console.error('App: Error in createUserProfile:', error);
@@ -289,6 +300,36 @@ function App() {
             </li>
             <li>Redeploy your project</li>
           </ol>
+        </div>
+        
+        {/* Database Fix Section */}
+        <div className="database-fix">
+          <h3>🔧 Database Schema Fix Required</h3>
+          <p>Your Supabase database is missing the <code>role</code> column in the <code>profiles</code> table.</p>
+          
+          <div className="fix-steps">
+            <h4>Steps to Fix:</h4>
+            <ol>
+              <li><strong>Go to Supabase Dashboard:</strong> <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">https://supabase.com/dashboard</a></li>
+              <li><strong>Open your project:</strong> Click on your NIL Matchup project</li>
+              <li><strong>Go to SQL Editor:</strong> Click "SQL Editor" in the left sidebar</li>
+              <li><strong>Run this script:</strong> Copy and paste the SQL script below</li>
+              <li><strong>Click "Run"</strong> to execute the script</li>
+              <li><strong>Refresh your website</strong> after the script completes</li>
+            </ol>
+          </div>
+          
+          <div className="sql-script">
+            <h4>SQL Script to Run:</h4>
+            <pre>{`-- Add missing 'role' column to profiles table
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'athlete';
+
+-- Update existing profiles
+UPDATE public.profiles 
+SET role = 'athlete' 
+WHERE role IS NULL;`}</pre>
+          </div>
         </div>
       </div>
     );
