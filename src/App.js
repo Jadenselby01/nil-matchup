@@ -151,8 +151,9 @@ function App() {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('App: No profile found for user (this is normal for new users)');
-          setCurrentPage('landing');
+          console.log('App: No profile found for user, creating one...');
+          // Create profile automatically
+          await createUserProfile(userId);
           return;
         }
         console.error('App: Error fetching user profile:', error);
@@ -169,6 +170,47 @@ function App() {
     } catch (error) {
       console.error('App: Error in fetchUserProfile:', error);
       setConfigError(`Profile error: ${error.message}`);
+    }
+  };
+
+  // Create user profile if it doesn't exist
+  const createUserProfile = async (userId) => {
+    try {
+      console.log('App: Creating profile for user:', userId);
+      
+      // Get user metadata from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      const userMetadata = user?.user_metadata || {};
+      
+      const profileData = {
+        id: userId,
+        email: user?.email || '',
+        full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User',
+        role: userMetadata.user_type || 'athlete', // Default to athlete
+        created_at: new Date().toISOString()
+      };
+
+      console.log('App: Creating profile with data:', profileData);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('App: Error creating profile:', error);
+        setConfigError(`Failed to create profile: ${error.message}`);
+        return;
+      }
+
+      console.log('App: Profile created successfully:', data);
+      setUserProfile(data);
+      setCurrentPage(data.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
+      
+    } catch (error) {
+      console.error('App: Error in createUserProfile:', error);
+      setConfigError(`Profile creation error: ${error.message}`);
     }
   };
 
@@ -268,6 +310,21 @@ function App() {
             Sign In
           </button>
         </div>
+        
+        {/* Debug: Manual dashboard access */}
+        {userProfile && (
+          <div className="debug-dashboard-access">
+            <p>✅ You're logged in as: {userProfile.email}</p>
+            <p>Role: {userProfile.role}</p>
+            <button
+              className="landing-btn primary-btn"
+              onClick={() => setCurrentPage(userProfile.role === 'athlete' ? 'athlete-dashboard' : 'business-dashboard')}
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        )}
+        
         <p className="landing-version">Version: {APP_VERSION}</p>
       </div>
     </div>

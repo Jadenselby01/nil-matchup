@@ -95,6 +95,24 @@
   font-family: monospace;
 }
 
+.debug-dashboard-access {
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.debug-dashboard-access p {
+  margin: 10px 0;
+  color: white;
+  font-size: 14px;
+}
+
+.debug-dashboard-access button {
+  margin-top: 15px;
+}
+
 /* Loading Screen */
 .dashboard-loading {
   display: flex;
