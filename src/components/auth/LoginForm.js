@@ -2,30 +2,18 @@ import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import './AuthForms.css';
 
-const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    rememberMe: true
+    password: ''
   });
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    if (error) setError('');
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showVerificationHelp, setShowVerificationHelp] = useState(false);
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
-      return false;
-    }
-    if (!formData.email.includes('@')) {
-      setError('Please enter a valid email address');
       return false;
     }
     return true;
@@ -33,11 +21,11 @@ const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-
+    
     setLoading(true);
     setError('');
+    setShowVerificationHelp(false);
 
     try {
       console.log('Attempting to sign in with:', { email: formData.email, password: formData.password });
@@ -52,27 +40,21 @@ const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
       if (signInError) {
         console.error('Sign in error:', signInError);
         
-        // Show user-friendly error messages
-        let errorMessage = 'Sign in failed. ';
-        if (signInError.message.includes('Invalid login credentials')) {
-          errorMessage += 'Please check your email and password.';
-        } else if (signInError.message.includes('Email not confirmed')) {
-          errorMessage += 'Please check your email and confirm your account.';
+        if (signInError.message.includes('Email not confirmed')) {
+          setError('Your email is not verified. Please check your inbox and click the verification link.');
+          setShowVerificationHelp(true);
+        } else if (signInError.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials.');
         } else if (signInError.message.includes('Too many requests')) {
-          errorMessage += 'Too many login attempts. Please try again later.';
+          setError('Too many login attempts. Please wait a few minutes and try again.');
         } else {
-          errorMessage += signInError.message || 'Please try again.';
+          setError(`Sign in failed: ${signInError.message}`);
         }
-        
-        setError(errorMessage);
       } else if (data && data.user) {
         console.log('Sign in successful:', data);
-        // Success - user will be automatically redirected by App.js
         if (onAuthSuccess) {
           onAuthSuccess(data.user);
         }
-      } else {
-        setError('Sign in successful but no user data received. Please try again.');
       }
     } catch (err) {
       console.error('Unexpected error during sign in:', err);
@@ -82,80 +64,104 @@ const LoginForm = ({ onSwitchToSignup, onAuthSuccess }) => {
     }
   };
 
+  const handleResendVerification = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email
+      });
+      
+      if (error) {
+        setError(`Failed to resend verification: ${error.message}`);
+      } else {
+        setError('Verification email sent! Check your inbox and spam folder.');
+        setShowVerificationHelp(false);
+      }
+    } catch (err) {
+      setError('Failed to resend verification email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError(''); // Clear error when user types
+  };
+
   return (
-    <div className="auth-form-container">
+    <div className="auth-form">
       <h2>Welcome Back</h2>
-      <p className="auth-subtitle">Sign in to your NIL Matchup account</p>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <form onSubmit={handleSubmit} className="auth-form">
+      <p>Sign in to your NIL Matchup account</p>
+      
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Email Address *</label>
+          <label htmlFor="email">Email Address *</label>
           <input
             type="email"
+            id="email"
+            name="email"
             value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder="Enter your email address"
+            onChange={handleInputChange}
             required
-            autoComplete="email"
+            placeholder="Enter your email"
           />
         </div>
 
         <div className="form-group">
-          <label>Password *</label>
+          <label htmlFor="password">Password *</label>
           <input
             type="password"
+            id="password"
+            name="password"
             value={formData.password}
-            onChange={(e) => handleInputChange('password', e.target.value)}
-            placeholder="Enter your password"
+            onChange={handleInputChange}
             required
-            autoComplete="current-password"
+            placeholder="Enter your password"
           />
         </div>
 
-        <div className="form-group">
-          <div className="checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={formData.rememberMe}
-                onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
-              />
-              <span className="checkbox-custom"></span>
-              Remember me (stay logged in)
-            </label>
-          </div>
+        <div className="form-group checkbox-group">
+          <label>
+            <input type="checkbox" /> Remember me (stay logged in)
+          </label>
         </div>
 
-        <button
-          type="submit"
-          className="auth-btn primary-btn"
-          disabled={loading}
-        >
+        {error && (
+          <div className="error-message">
+            {error}
+            {showVerificationHelp && (
+              <div className="verification-help">
+                <p>Need help with verification?</p>
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  className="resend-button"
+                  disabled={loading}
+                >
+                  {loading ? 'Sending...' : 'Resend Verification Email'}
+                </button>
+                <p className="verification-tips">
+                  • Check your spam/junk folder<br/>
+                  • Make sure you clicked the verification link<br/>
+                  • Contact support if you need help
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <button type="submit" className="submit-btn" disabled={loading}>
           {loading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
 
-      <div className="auth-footer">
-        <p>Don't have an account? 
-          <button
-            type="button"
-            className="link-btn"
-            onClick={onSwitchToSignup}
-          >
-            Create Account
-          </button>
-        </p>
-        <p className="forgot-password">
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => alert('Password reset feature coming soon!')}
-          >
-            Forgot your password?
-          </button>
-        </p>
+      <div className="auth-switch">
+        <p>Don't have an account? <button type="button" onClick={onSwitchToSignup}>Create Account</button></p>
       </div>
     </div>
   );
