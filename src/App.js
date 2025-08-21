@@ -56,26 +56,48 @@ function App() {
     try {
       console.log('Testing Supabase connection...');
       
-      // Test 1: Basic client creation
-      console.log('Supabase client created:', !!supabase);
-      
-      // Test 2: Try to get session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      console.log('Session test result:', { sessionData, sessionError });
-      
-      if (sessionError) {
-        console.error('Supabase session error:', sessionError);
-        setConfigError(`Supabase connection failed: ${sessionError.message}`);
-        setLoading(false);
-        return;
-      }
-      
-      console.log('✅ Supabase connection successful!');
+      // Add timeout to prevent hanging
+      const connectionPromise = new Promise(async (resolve, reject) => {
+        try {
+          // Test 1: Basic client creation
+          console.log('Supabase client created:', !!supabase);
+          
+          // Test 2: Try to get session with timeout
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          console.log('Session test result:', { sessionData, sessionError });
+          
+          if (sessionError) {
+            reject(new Error(`Supabase session error: ${sessionError.message}`));
+            return;
+          }
+          
+          resolve('✅ Supabase connection successful!');
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      // Add 10 second timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000);
+      });
+
+      const result = await Promise.race([connectionPromise, timeoutPromise]);
+      console.log(result);
       
     } catch (error) {
       console.error('Supabase connection test failed:', error);
-      setConfigError(`Supabase connection test failed: ${error.message}`);
-      setLoading(false);
+      
+      // If connection fails, show error but don't block the app
+      if (error.message.includes('timeout')) {
+        console.warn('Supabase connection timed out, proceeding with app initialization...');
+        // Continue with app initialization even if Supabase is slow
+        setLoading(false);
+        setCurrentPage('landing');
+      } else {
+        setConfigError(`Supabase connection test failed: ${error.message}`);
+        setLoading(false);
+      }
     }
   };
 
@@ -283,6 +305,21 @@ function App() {
           <p>Debug: Checking Supabase connection...</p>
           <p>URL: {process.env.REACT_APP_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</p>
           <p>Key: {process.env.REACT_APP_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</p>
+        </div>
+        
+        {/* Manual bypass button */}
+        <div className="loading-bypass">
+          <p>If loading takes too long, you can:</p>
+          <button
+            className="bypass-btn"
+            onClick={() => {
+              console.log('Manual bypass clicked, proceeding to landing page...');
+              setLoading(false);
+              setCurrentPage('landing');
+            }}
+          >
+            Continue to App
+          </button>
         </div>
       </div>
     );

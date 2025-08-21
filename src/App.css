@@ -166,6 +166,38 @@
   color: #666;
 }
 
+.loading-bypass {
+  margin-top: 30px;
+  padding: 20px;
+  background: #e7f3ff;
+  border-radius: 8px;
+  border: 1px solid #007bff;
+  text-align: center;
+  max-width: 400px;
+}
+
+.loading-bypass p {
+  margin: 0 0 15px 0;
+  color: #0056b3;
+  font-size: 14px;
+}
+
+.bypass-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.bypass-btn:hover {
+  background: #0056b3;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
