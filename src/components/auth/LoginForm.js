@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthProvider';
+import { assertProfileExists } from '../../utils/assertProfile';
 import { supabase } from '../../lib/supabaseClient';
 import './AuthForms.css';
 
-const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
+const LoginForm = ({ onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -10,6 +13,10 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showVerificationHelp, setShowVerificationHelp] = useState(false);
+  const [remember, setRemember] = useState(true);
+  
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
@@ -30,12 +37,7 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
     try {
       console.log('Attempting to sign in with:', { email: formData.email, password: formData.password });
       
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
-      });
-
-      console.log('Sign in result:', { data, error: signInError });
+      const { error: signInError } = await signIn(formData.email, formData.password, remember);
 
       if (signInError) {
         console.error('Sign in error:', signInError);
@@ -50,12 +52,20 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
         } else {
           setError(`Sign in failed: ${signInError.message}`);
         }
-      } else if (data && data.user) {
-        console.log('Sign in successful:', data);
-        if (onAuthSuccess) {
-          onAuthSuccess(data.user);
-        }
+        return;
       }
+
+      // Success - ensure profile exists and redirect
+      try {
+        await assertProfileExists();
+      } catch (profileError) {
+        console.warn('Profile check failed:', profileError);
+        // Continue anyway - don't block login
+      }
+      
+      // Redirect to dashboard
+      navigate('/athlete-dashboard', { replace: true });
+      
     } catch (err) {
       console.error('Unexpected error during sign in:', err);
       setError('An unexpected error occurred. Please try again.');
@@ -127,7 +137,12 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
 
         <div className="form-group checkbox-group">
           <label>
-            <input type="checkbox" /> Remember me (stay logged in)
+            <input 
+              type="checkbox" 
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            /> 
+            Remember me (stay logged in)
           </label>
         </div>
 
