@@ -1,15 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = process.env.REACT_APP_SUPABASE_URL;
-const anon = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-if (!url || !anon) {
-  // Surface a loud error in dev
+if (!supabaseUrl || !supabaseAnonKey) {
+  // dev-time visibility
   // eslint-disable-next-line no-console
-  console.error('Missing REACT_APP_SUPABASE_URL or REACT_APP_SUPABASE_ANON_KEY');
+  console.warn('Missing Supabase env vars', { 
+    supabaseUrlPresent: !!supabaseUrl, 
+    supabaseAnonKeyPresent: !!supabaseAnonKey 
+  });
 }
 
-export const supabase = createClient(url, anon, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: { 
     persistSession: true, 
     autoRefreshToken: true, 
