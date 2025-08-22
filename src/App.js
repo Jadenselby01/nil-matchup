@@ -202,73 +202,80 @@ function App() {
       
       // Get user metadata from auth
       const { data: { user } } = await supabase.auth.getUser();
-      const userMetadata = user?.user_metadata || {};
+      if (!user) {
+        console.error('App: No authenticated user found');
+        setConfigError('Authentication error: No user found');
+        return;
+      }
       
+      const userMetadata = user?.user_metadata || {};
       console.log('App: User metadata:', userMetadata);
       
-      // Create profile with minimal data - no role column needed
-      const profileData = {
-        id: userId,
-        email: user?.email || '',
-        full_name: userMetadata.full_name || userMetadata.first_name + ' ' + userMetadata.last_name || 'User'
-      };
-
-      console.log('App: Creating profile with minimal data:', profileData);
-
-      // Try to insert the profile
-      const { data, error } = await supabase
+      // RLS-compliant approach: rely on trigger to create row, then update
+      const fullName = userMetadata.full_name || 
+                      (userMetadata.first_name && userMetadata.last_name ? 
+                       `${userMetadata.first_name} ${userMetadata.last_name}` : 'User');
+      
+      // First, try to update existing profile (created by trigger)
+      const { data: updateData, error: updateError } = await supabase
         .from('profiles')
-        .insert(profileData)
+        .update({ 
+          full_name: fullName,
+          role: userMetadata.user_type || 'athlete'
+        })
+        .eq('id', userId)
         .select()
         .single();
 
-      if (error) {
-        console.error('App: Error creating profile:', error);
+      if (updateError) {
+        console.error('App: Error updating profile:', updateError);
         
-        // If it's a schema error, try to create a basic profile
-        if (error.message.includes('schema') || error.message.includes('column')) {
-          console.log('App: Schema error detected, trying alternative approach...');
+        // If update fails, try to insert (RLS will enforce id === auth.uid())
+        if (updateError.code === 'PGRST116') { // No rows returned
+          console.log('App: Profile not found, attempting insert...');
           
-          // Try to create profile with just the essential fields
-          const basicProfileData = {
-            id: userId,
-            email: user?.email || ''
-          };
-          
-          console.log('App: Trying basic profile:', basicProfileData);
-          
-          const { data: basicData, error: basicError } = await supabase
+          const { data: insertData, error: insertError } = await supabase
             .from('profiles')
-            .insert(basicProfileData)
+            .insert([{ 
+              id: userId, 
+              full_name: fullName,
+              role: userMetadata.user_type || 'athlete'
+            }])
             .select()
             .single();
             
-          if (basicError) {
-            console.error('App: Basic profile creation also failed:', basicError);
-            setConfigError(`Database error: ${basicError.message}. Your profiles table may need to be recreated.`);
-            return;
+          if (insertError) {
+            console.error('App: Profile insert failed:', insertError);
+            throw new Error(`Profile insert failed: ${insertError.message}. If this mentions row-level security or "PGRST", ensure RLS policies and the auth trigger are installed.`);
           }
           
-          console.log('App: Basic profile created successfully:', basicData);
-          setUserProfile(basicData);
-          setCurrentPage('athlete-dashboard'); // Default to athlete dashboard
+          console.log('App: Profile created successfully via insert:', insertData);
+          setUserProfile(insertData);
+          const userRole = insertData.role || 'athlete';
+          setCurrentPage(userRole === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
           return;
         }
         
-        setConfigError(`Failed to create profile: ${error.message}`);
-        return;
+        // Handle other errors
+        throw new Error(`Profile update failed: ${updateError.message}. If this mentions row-level security or "PGRST", ensure RLS policies and the auth trigger are installed.`);
       }
 
-      console.log('App: Profile created successfully:', data);
-      setUserProfile(data);
+      console.log('App: Profile updated successfully:', updateData);
+      setUserProfile(updateData);
       
-      // Redirect to dashboard - default to athlete if role is missing
-      const userRole = data.role || 'athlete';
+      // Redirect to dashboard based on role
+      const userRole = updateData.role || 'athlete';
       setCurrentPage(userRole === 'athlete' ? 'athlete-dashboard' : 'business-dashboard');
       
     } catch (error) {
       console.error('App: Error in createUserProfile:', error);
-      setConfigError(`Profile creation error: ${error.message}`);
+      const message = (error && (error.message || error.error_description)) || 'Unknown error';
+      console.error('Profiles upsert failed', {
+        message,
+        code: error?.code,
+        details: error,
+      });
+      setConfigError(`Profile save failed: ${message}. If this mentions row-level security or "PGRST", ensure RLS policies and the auth trigger are installed.`);
     }
   };
 

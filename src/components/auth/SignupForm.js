@@ -94,13 +94,29 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create profile');
+        const errorMessage = errorData.error || 'Failed to create profile';
+        console.error('Profile creation failed:', {
+          status: response.status,
+          error: errorData,
+          message: errorMessage
+        });
+        throw new Error(errorMessage);
       }
 
+      const result = await response.json();
+      console.log('Profile created successfully:', result);
       return true;
     } catch (error) {
       console.error('Profile creation error:', error);
-      throw error;
+      const message = (error && (error.message || error.error_description)) || 'Unknown error';
+      console.error('Profiles upsert failed', {
+        message,
+        code: error?.code,
+        details: error,
+      });
+      throw new Error(
+        `Profile save failed: ${message}. If this mentions row-level security or "PGRST", ensure RLS policies and the auth trigger are installed.`
+      );
     }
   };
 
