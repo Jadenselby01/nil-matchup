@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './AuthForms.css';
 
 const SignupForm = ({ onSwitchToLogin }) => {
@@ -22,6 +23,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [remember, setRemember] = useState(true);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
   
   const { signUp } = useAuth();
 
@@ -40,6 +42,10 @@ const SignupForm = ({ onSwitchToLogin }) => {
     }
     if (!formData.agreeToTerms || !formData.agreeToPrivacy) {
       setError('Please agree to the terms and privacy policy');
+      return false;
+    }
+    if (!recaptchaToken) {
+      setError('Please complete the human verification');
       return false;
     }
     if (formData.userType === 'athlete' && (!formData.firstName || !formData.lastName)) {
@@ -324,6 +330,18 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <span className="checkmark"></span>
             Remember me (stay logged in)
           </label>
+        </div>
+
+        <div className="form-group">
+          <label>Human Verification *</label>
+          <div className="recaptcha-container">
+            <ReCAPTCHA
+              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+              onChange={(token) => setRecaptchaToken(token)}
+              onExpired={() => setRecaptchaToken(null)}
+              onError={() => setRecaptchaToken(null)}
+            />
+          </div>
         </div>
 
         <button type="submit" className="auth-button" disabled={loading}>

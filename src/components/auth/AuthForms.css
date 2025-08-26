@@ -187,3 +187,25 @@
     font-size: 16px; /* Prevents zoom on iOS */
   }
 } 
+
+.recaptcha-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.recaptcha-container > div {
+  transform: scale(0.9);
+  transform-origin: 0 0;
+}
+
+/* Ensure reCAPTCHA is responsive */
+@media (max-width: 480px) {
+  .recaptcha-container > div {
+    transform: scale(0.8);
+  }
+} 
