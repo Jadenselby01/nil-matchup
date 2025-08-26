@@ -8,14 +8,13 @@ import './App.css';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/auth/AuthPage';
 import DashboardRouter from './components/DashboardRouter';
+import MessagingPage from './components/MessagingPage';
 import CreateDealForm from './components/deals/CreateDealForm';
 import DealDiscoveryPage from './components/deals/DealDiscoveryPage';
 import DealsPage from './components/DealsPage';
 import PaymentPage from './components/PaymentPage';
 import PaymentProcessingPage from './components/PaymentProcessingPage';
-import MessagingPage from './components/MessagingPage';
-import OffersPage from './components/OffersPage';
-import ProposalsPage from './components/ProposalsPage';
+
 
 export default function App() {
   return (
@@ -36,8 +35,7 @@ export default function App() {
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/payment-processing" element={<PaymentProcessingPage />} />
               <Route path="/messaging" element={<MessagingPage />} />
-              <Route path="/offers" element={<OffersPage />} />
-              <Route path="/proposals" element={<ProposalsPage />} />
+
             </Route>
             
             {/* Fallback */}
