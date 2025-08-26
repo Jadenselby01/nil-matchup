@@ -208,4 +208,12 @@
   .recaptcha-container > div {
     transform: scale(0.8);
   }
+}
+
+.recaptcha-success {
+  color: #4caf50;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
 } 

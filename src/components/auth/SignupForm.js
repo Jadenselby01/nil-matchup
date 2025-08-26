@@ -61,6 +61,12 @@ const SignupForm = ({ onSwitchToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Debug logging
+    console.log('Form submission started');
+    console.log('reCAPTCHA token:', recaptchaToken);
+    console.log('Form data:', formData);
+    
     if (!validateForm()) return;
     
     setLoading(true);
@@ -84,6 +90,8 @@ const SignupForm = ({ onSwitchToLogin }) => {
         userData.company_type = formData.companyType;
         userData.bio = formData.bio;
       }
+
+      console.log('Attempting signup with data:', userData);
 
       // Create user account with role in metadata
       const { error: signUpError } = await signUp(
@@ -117,6 +125,24 @@ const SignupForm = ({ onSwitchToLogin }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
     setError(''); // Clear error when user types
+  };
+
+  const handleRecaptchaChange = (token) => {
+    console.log('reCAPTCHA token received:', token);
+    setRecaptchaToken(token);
+    setError(''); // Clear any previous errors
+  };
+
+  const handleRecaptchaExpired = () => {
+    console.log('reCAPTCHA expired');
+    setRecaptchaToken(null);
+    setError('Human verification expired. Please complete it again.');
+  };
+
+  const handleRecaptchaError = () => {
+    console.log('reCAPTCHA error');
+    setRecaptchaToken(null);
+    setError('Human verification failed. Please try again.');
   };
 
   return (
@@ -337,11 +363,16 @@ const SignupForm = ({ onSwitchToLogin }) => {
           <div className="recaptcha-container">
             <ReCAPTCHA
               sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-              onChange={(token) => setRecaptchaToken(token)}
-              onExpired={() => setRecaptchaToken(null)}
-              onError={() => setRecaptchaToken(null)}
+              onChange={handleRecaptchaChange}
+              onExpired={handleRecaptchaExpired}
+              onError={handleRecaptchaError}
             />
           </div>
+          {recaptchaToken && (
+            <div className="recaptcha-success">
+              ✅ Human verification completed
+            </div>
+          )}
         </div>
 
         <button type="submit" className="auth-button" disabled={loading}>
