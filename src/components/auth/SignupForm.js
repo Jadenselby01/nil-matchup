@@ -28,34 +28,54 @@ const SignupForm = ({ onSwitchToLogin }) => {
   const { signUp } = useAuth();
 
   const validateForm = () => {
+    console.log('=== FORM VALIDATION START ===');
+    console.log('Email:', formData.email);
+    console.log('Password length:', formData.password?.length);
+    console.log('Passwords match:', formData.password === formData.confirmPassword);
+    console.log('Terms agreed:', formData.agreeToTerms);
+    console.log('Privacy agreed:', formData.agreeToPrivacy);
+    console.log('reCAPTCHA token:', recaptchaToken);
+    console.log('User type:', formData.userType);
+    console.log('First name:', formData.firstName);
+    console.log('Last name:', formData.lastName);
+    
     if (!formData.email || !formData.password || !formData.confirmPassword) {
+      console.log('❌ Missing required fields');
       setError('Please fill in all required fields');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
+      console.log('❌ Passwords do not match');
       setError('Passwords do not match');
       return false;
     }
     if (formData.password.length < 6) {
+      console.log('❌ Password too short');
       setError('Password must be at least 6 characters long');
       return false;
     }
     if (!formData.agreeToTerms || !formData.agreeToPrivacy) {
+      console.log('❌ Terms not agreed to');
       setError('Please agree to the terms and privacy policy');
       return false;
     }
     if (!recaptchaToken) {
+      console.log('❌ reCAPTCHA not completed');
       setError('Please complete the human verification');
       return false;
     }
     if (formData.userType === 'athlete' && (!formData.firstName || !formData.lastName)) {
+      console.log('❌ Missing athlete name');
       setError('Please provide your first and last name');
       return false;
     }
     if (formData.userType === 'business' && !formData.companyName) {
+      console.log('❌ Missing company name');
       setError('Please provide your company name');
       return false;
     }
+    
+    console.log('✅ Form validation passed!');
     return true;
   };
 
@@ -377,6 +397,29 @@ const SignupForm = ({ onSwitchToLogin }) => {
 
         <button type="submit" className="auth-button" disabled={loading}>
           {loading ? 'Creating Account...' : 'Create Account'}
+        </button>
+        
+        {/* Debug button - remove this after testing */}
+        <button 
+          type="button" 
+          className="debug-button" 
+          onClick={() => {
+            console.log('=== DEBUG BUTTON CLICKED ===');
+            console.log('Form data:', formData);
+            console.log('reCAPTCHA token:', recaptchaToken);
+            console.log('Validation result:', validateForm());
+          }}
+          style={{ 
+            marginTop: '10px', 
+            padding: '8px 16px', 
+            backgroundColor: '#ff9800', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            fontSize: '12px'
+          }}
+        >
+          🐛 Debug Form (Click to see console logs)
         </button>
       </form>
 
