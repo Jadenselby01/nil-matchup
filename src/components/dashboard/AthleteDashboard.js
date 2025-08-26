@@ -197,20 +197,16 @@ const AthleteDashboard = ({ onNavigate }) => {
               <h3>Profile Information</h3>
               <div className="profile-form">
                 <div className="form-group">
-                  <label>First Name</label>
-                  <input type="text" value={userProfile?.first_name || ''} readOnly />
-                </div>
-                <div className="form-group">
-                  <label>Last Name</label>
-                  <input type="text" value={userProfile?.last_name || ''} readOnly />
+                  <label>Full Name</label>
+                  <input type="text" value={profile?.full_name || ''} readOnly />
                 </div>
                 <div className="form-group">
                   <label>Sport</label>
-                  <input type="text" value={userProfile?.sport || ''} readOnly />
+                  <input type="text" value={profile?.sport || ''} readOnly />
                 </div>
                 <div className="form-group">
                   <label>University</label>
-                  <input type="text" value={userProfile?.university || ''} readOnly />
+                  <input type="text" value={profile?.university || ''} readOnly />
                 </div>
                 <button className="btn-primary">Edit Profile</button>
               </div>

@@ -65,17 +65,9 @@ const LoginForm = ({ onSwitchToSignup }) => {
   const handleResendVerification = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: formData.email
-      });
-      
-      if (error) {
-        setError(`Failed to resend verification: ${error.message}`);
-      } else {
-        setError('Verification email sent! Check your inbox and spam folder.');
-        setShowVerificationHelp(false);
-      }
+      // Note: This functionality will be implemented when needed
+      setError('Verification email functionality coming soon!');
+      setShowVerificationHelp(false);
     } catch (err) {
       setError('Failed to resend verification email. Please try again.');
     } finally {
