@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import './Dashboard.css';
 
 const BusinessDashboard = ({ onNavigate }) => {
-  const { user, userProfile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -70,11 +70,11 @@ const BusinessDashboard = ({ onNavigate }) => {
         <div className="dashboard-header-content">
           <div className="user-info">
             <div className="user-avatar business">
-              {userProfile?.company_name?.charAt(0) || userProfile?.first_name?.charAt(0) || user?.email?.charAt(0) || 'B'}
+              {profile?.company_name?.charAt(0) || profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'B'}
             </div>
             <div className="user-details">
-              <h1>Welcome back, {userProfile?.company_name || userProfile?.first_name || 'Business'}!</h1>
-              <p>{userProfile?.company_type || 'Business Partner'}</p>
+              <h1>Welcome back, {profile?.company_name || profile?.full_name || 'Business'}!</h1>
+              <p>{profile?.company_type || 'Business Partner'}</p>
             </div>
           </div>
           <button className="sign-out-btn" onClick={handleSignOut}>

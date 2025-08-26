@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
 import './AuthForms.css';
 
-const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
+const LoginForm = ({ onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -10,6 +10,9 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showVerificationHelp, setShowVerificationHelp] = useState(false);
+  const [remember, setRemember] = useState(true);
+  
+  const { signIn } = useAuth();
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
@@ -30,12 +33,7 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
     try {
       console.log('Attempting to sign in with:', { email: formData.email, password: formData.password });
       
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
-      });
-
-      console.log('Sign in result:', { data, error: signInError });
+      const { error: signInError } = await signIn(formData.email, formData.password, remember);
 
       if (signInError) {
         console.error('Sign in error:', signInError);
@@ -50,12 +48,12 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
         } else {
           setError(`Sign in failed: ${signInError.message}`);
         }
-      } else if (data && data.user) {
-        console.log('Sign in successful:', data);
-        if (onAuthSuccess) {
-          onAuthSuccess(data.user);
-        }
+        return;
       }
+
+      // Success - AuthContext will handle redirect to dashboard
+      console.log('Sign in successful, redirecting to dashboard...');
+      
     } catch (err) {
       console.error('Unexpected error during sign in:', err);
       setError('An unexpected error occurred. Please try again.');
@@ -86,10 +84,11 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
   };
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
     setError(''); // Clear error when user types
   };
 
@@ -97,6 +96,8 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
     <div className="auth-form">
       <h2>Welcome Back</h2>
       <p>Sign in to your NIL Matchup account</p>
+      
+      {error && <div className="error-message">{error}</div>}
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -108,7 +109,7 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
             value={formData.email}
             onChange={handleInputChange}
             required
-            placeholder="Enter your email"
+            disabled={loading}
           />
         </div>
 
@@ -121,47 +122,45 @@ const LoginForm = ({ onAuthSuccess, onSwitchToSignup }) => {
             value={formData.password}
             onChange={handleInputChange}
             required
-            placeholder="Enter your password"
+            disabled={loading}
           />
         </div>
 
-        <div className="form-group checkbox-group">
-          <label>
-            <input type="checkbox" /> Remember me (stay logged in)
+        <div className="form-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="remember"
+              checked={formData.remember}
+              onChange={handleInputChange}
+              disabled={loading}
+            />
+            <span className="checkmark"></span>
+            Remember me (stay logged in)
           </label>
         </div>
 
-        {error && (
-          <div className="error-message">
-            {error}
-            {showVerificationHelp && (
-              <div className="verification-help">
-                <p>Need help with verification?</p>
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  className="resend-button"
-                  disabled={loading}
-                >
-                  {loading ? 'Sending...' : 'Resend Verification Email'}
-                </button>
-                <p className="verification-tips">
-                  • Check your spam/junk folder<br/>
-                  • Make sure you clicked the verification link<br/>
-                  • Contact support if you need help
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <button type="submit" className="submit-btn" disabled={loading}>
+        <button type="submit" className="auth-button" disabled={loading}>
           {loading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
 
+      {showVerificationHelp && (
+        <div className="verification-help">
+          <p>Need help with email verification?</p>
+          <button 
+            type="button" 
+            onClick={handleResendVerification}
+            className="resend-button"
+            disabled={loading}
+          >
+            Resend Verification Email
+          </button>
+        </div>
+      )}
+
       <div className="auth-switch">
-        <p>Don't have an account? <button type="button" onClick={onSwitchToSignup}>Create Account</button></p>
+        <p>Don't have an account? <button type="button" onClick={onSwitchToSignup}>Sign up</button></p>
       </div>
     </div>
   );

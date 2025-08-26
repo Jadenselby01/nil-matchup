@@ -4,12 +4,7 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // dev-time visibility
-  // eslint-disable-next-line no-console
-  console.warn('Missing Supabase env vars', { 
-    supabaseUrlPresent: !!supabaseUrl, 
-    supabaseAnonKeyPresent: !!supabaseAnonKey 
-  });
+  throw new Error('Missing Supabase environment variables');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -18,4 +13,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true, 
     detectSessionInUrl: true 
   }
-}); 
+});
+
+export default supabase; 

@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
-import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
 import './AuthForms.css';
 
-const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [recaptchaToken, setRecaptchaToken] = useState(null);
-  
+const SignupForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,19 +18,12 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
     agreeToTerms: false,
     agreeToPrivacy: false
   });
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    if (error) setError('');
-  };
-
-  const handleRecaptchaChange = (token) => {
-    setRecaptchaToken(token);
-    if (error) setError('');
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [remember, setRemember] = useState(true);
+  
+  const { signUp } = useAuth();
 
   const validateForm = () => {
     if (!formData.email || !formData.password || !formData.confirmPassword) {
@@ -47,104 +34,58 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
       setError('Passwords do not match');
       return false;
     }
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return false;
     }
     if (!formData.agreeToTerms || !formData.agreeToPrivacy) {
       setError('Please agree to the terms and privacy policy');
       return false;
     }
-    if (!recaptchaToken) {
-      setError('Please complete the human verification');
+    if (formData.userType === 'athlete' && (!formData.firstName || !formData.lastName)) {
+      setError('Please provide your first and last name');
       return false;
     }
-    if (formData.userType === 'athlete') {
-      if (!formData.firstName || !formData.sport || !formData.university) {
-        setError('Please fill in all athlete-specific fields');
-        return false;
-      }
-    }
-    if (formData.userType === 'business') {
-      if (!formData.companyName || !formData.companyType) {
-        setError('Please fill in all business-specific fields');
-        return false;
-      }
+    if (formData.userType === 'business' && !formData.companyName) {
+      setError('Please provide your company name');
+      return false;
     }
     return true;
-  };
-
-  const createUserProfile = async (userId, email) => {
-    try {
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-      const role = formData.userType;
-      
-      const response = await fetch('/api/create-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          email: email,
-          full_name: fullName,
-          role: role
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || 'Failed to create profile';
-        console.error('Profile creation failed:', {
-          status: response.status,
-          error: errorData,
-          message: errorMessage
-        });
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-      console.log('Profile created successfully:', result);
-      return true;
-    } catch (error) {
-      console.error('Profile creation error:', error);
-      const message = (error && (error.message || error.error_description)) || 'Unknown error';
-      console.error('Profiles upsert failed', {
-        message,
-        code: error?.code,
-        details: error,
-      });
-      throw new Error(
-        `Profile save failed: ${message}. If this mentions row-level security or "PGRST", ensure RLS policies and the auth trigger are installed.`
-      );
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      // Create user account
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            user_type: formData.userType,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            sport: formData.sport,
-            university: formData.university,
-            company_name: formData.companyName,
-            company_type: formData.companyType,
-            bio: formData.bio
-          }
-        }
-      });
+      // Prepare user data for signup
+      const userData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        display_name: `${formData.firstName} ${formData.lastName}`.trim()
+      };
+
+      if (formData.userType === 'athlete') {
+        userData.sport = formData.sport;
+        userData.university = formData.university;
+        userData.bio = formData.bio;
+      } else if (formData.userType === 'business') {
+        userData.company_name = formData.companyName;
+        userData.company_type = formData.companyType;
+        userData.bio = formData.bio;
+      }
+
+      // Create user account with role in metadata
+      const { error: signUpError } = await signUp(
+        formData.email, 
+        formData.password, 
+        formData.userType,
+        userData
+      );
 
       if (signUpError) {
         console.error('Sign up error:', signUpError);
@@ -152,30 +93,9 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
         return;
       }
 
-      if (data.user) {
-        // Create user profile via API
-        try {
-          await createUserProfile(data.user.id, formData.email);
-        } catch (profileError) {
-          console.error('Profile creation failed:', profileError);
-          // Don't fail the signup if profile creation fails
-          setError(`Account created but profile setup failed: ${profileError.message}. Please contact support.`);
-          return;
-        }
-
-        setSuccess('Account created successfully! Please check your email to verify your account.');
-        setFormData({
-          email: '', password: '', confirmPassword: '', userType: 'athlete',
-          firstName: '', lastName: '', sport: '', university: '',
-          companyName: '', companyType: '', bio: '',
-          agreeToTerms: false, agreeToPrivacy: false
-        });
-        setRecaptchaToken(null);
-        
-        if (onAuthSuccess) {
-          onAuthSuccess(data.user);
-        }
-      }
+      // Success - AuthContext will handle profile creation and redirect
+      setSuccess('Account created successfully! Redirecting to dashboard...');
+      
     } catch (err) {
       console.error('Unexpected error during sign up:', err);
       setError('An unexpected error occurred. Please try again.');
@@ -184,136 +104,235 @@ const SignupForm = ({ onSwitchToLogin, onAuthSuccess }) => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    setError(''); // Clear error when user types
+  };
+
   return (
-    <div className="auth-form-container">
+    <div className="auth-form">
       <h2>Create Your Account</h2>
-      <p className="auth-subtitle">Join NIL Matchup and start connecting!</p>
+      <p>Join NIL Matchup and start connecting!</p>
+      
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
-      <form onSubmit={handleSubmit} className="auth-form">
+      
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>I am a:</label>
           <div className="user-type-selector">
             <label className="radio-label">
-              <input type="radio" name="userType" value="athlete" checked={formData.userType === 'athlete'} onChange={(e) => handleInputChange('userType', e.target.value)} />
-              <span className="radio-custom"></span> Athlete
+              <input
+                type="radio"
+                name="userType"
+                value="athlete"
+                checked={formData.userType === 'athlete'}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+              <span className="radio-custom"></span>
+              Athlete
             </label>
             <label className="radio-label">
-              <input type="radio" name="userType" value="business" checked={formData.userType === 'business'} onChange={(e) => handleInputChange('userType', e.target.value)} />
-              <span className="radio-custom"></span> Business
+              <input
+                type="radio"
+                name="userType"
+                value="business"
+                checked={formData.userType === 'business'}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+              <span className="radio-custom"></span>
+              Business
             </label>
           </div>
         </div>
+
         <div className="form-row">
           <div className="form-group">
             <label>First Name *</label>
-            <input type="text" value={formData.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)} placeholder="Enter your first name" required />
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              required={formData.userType === 'athlete'}
+              disabled={loading}
+            />
           </div>
           <div className="form-group">
             <label>Last Name *</label>
-            <input type="text" value={formData.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)} placeholder="Enter your last name" required />
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              required={formData.userType === 'athlete'}
+              disabled={loading}
+            />
           </div>
         </div>
+
         {formData.userType === 'athlete' && (
           <>
             <div className="form-row">
               <div className="form-group">
-                <label>Sport *</label>
-                <select value={formData.sport} onChange={(e) => handleInputChange('sport', e.target.value)} required>
-                  <option value="">Select your sport</option>
-                  <option value="Football">Football</option>
-                  <option value="Basketball">Basketball</option>
-                  <option value="Baseball">Baseball</option>
-                  <option value="Soccer">Soccer</option>
-                  <option value="Tennis">Tennis</option>
-                  <option value="Swimming">Swimming</option>
-                  <option value="Track & Field">Track & Field</option>
-                  <option value="Golf">Golf</option>
-                  <option value="Volleyball">Volleyball</option>
-                  <option value="Other">Other</option>
-                </select>
+                <label>Sport</label>
+                <input
+                  type="text"
+                  name="sport"
+                  value={formData.sport}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Football, Basketball"
+                  disabled={loading}
+                />
               </div>
               <div className="form-group">
-                <label>University *</label>
-                <input type="text" value={formData.university} onChange={(e) => handleInputChange('university', e.target.value)} placeholder="Enter your university" required />
+                <label>University</label>
+                <input
+                  type="text"
+                  name="university"
+                  value={formData.university}
+                  onChange={handleInputChange}
+                  placeholder="e.g., UNC Chapel Hill"
+                  disabled={loading}
+                />
               </div>
             </div>
           </>
         )}
+
         {formData.userType === 'business' && (
           <>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Company Name *</label>
-                <input type="text" value={formData.companyName} onChange={(e) => handleInputChange('companyName', e.target.value)} placeholder="Enter your company name" required />
-              </div>
-              <div className="form-group">
-                <label>Company Type *</label>
-                <select value={formData.companyType} onChange={(e) => handleInputChange('companyType', e.target.value)} required>
-                  <option value="">Select company type</option>
-                  <option value="Restaurant">Restaurant</option>
-                  <option value="Retail">Retail</option>
-                  <option value="Fitness & Wellness">Fitness & Wellness</option>
-                  <option value="Automotive">Automotive</option>
-                  <option value="Real Estate">Real Estate</option>
-                  <option value="Professional Services">Professional Services</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label>Company Name *</label>
+              <input
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleInputChange}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="form-group">
+              <label>Company Type</label>
+              <input
+                type="text"
+                name="companyType"
+                value={formData.companyType}
+                onChange={handleInputChange}
+                placeholder="e.g., Restaurant, Retail, Service"
+                disabled={loading}
+              />
             </div>
           </>
         )}
+
         <div className="form-group">
           <label>Bio</label>
-          <textarea value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)} placeholder={`Tell us about yourself as a ${formData.userType}...`} rows="3" />
+          <textarea
+            name="bio"
+            value={formData.bio}
+            onChange={handleInputChange}
+            placeholder="Tell us about yourself..."
+            rows="3"
+            disabled={loading}
+          />
         </div>
+
         <div className="form-group">
           <label>Email Address *</label>
-          <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="Enter your email address" required />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+            disabled={loading}
+          />
         </div>
+
         <div className="form-row">
           <div className="form-group">
             <label>Password *</label>
-            <input type="password" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder="Create a password (min. 8 characters)" required />
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              minLength="6"
+              disabled={loading}
+            />
           </div>
           <div className="form-group">
             <label>Confirm Password *</label>
-            <input type="password" value={formData.confirmPassword} onChange={(e) => handleInputChange('confirmPassword', e.target.value)} placeholder="Confirm your password" required />
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              required
+              minLength="6"
+              disabled={loading}
+            />
           </div>
         </div>
+
         <div className="form-group">
-          <label>Human Verification *</label>
-          <ReCAPTCHA
-            sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
-            onChange={handleRecaptchaChange}
-            theme="light"
-          />
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="agreeToTerms"
+              checked={formData.agreeToTerms}
+              onChange={handleInputChange}
+              disabled={loading}
+            />
+            <span className="checkmark"></span>
+            I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a> *
+          </label>
         </div>
+
         <div className="form-group">
-          <div className="checkbox-group">
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.agreeToTerms} onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)} required />
-              <span className="checkbox-custom"></span> I agree to the <a href="/terms" target="_blank">Terms of Service</a> *
-            </label>
-          </div>
-          <div className="checkbox-group">
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.agreeToPrivacy} onChange={(e) => handleInputChange('agreeToPrivacy', e.target.checked)} required />
-              <span className="checkbox-custom"></span> I agree to the <a href="/privacy" target="_blank">Privacy Policy</a> *
-            </label>
-          </div>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="agreeToPrivacy"
+              checked={formData.agreeToPrivacy}
+              onChange={handleInputChange}
+              disabled={loading}
+            />
+            <span className="checkmark"></span>
+            I agree to the <a href="/privacy-policy" target="_blank">Privacy Policy</a> *
+          </label>
         </div>
-        <button type="submit" className="auth-btn primary-btn" disabled={loading}>
+
+        <div className="form-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="remember"
+              checked={formData.remember}
+              onChange={handleInputChange}
+              disabled={loading}
+            />
+            <span className="checkmark"></span>
+            Remember me (stay logged in)
+          </label>
+        </div>
+
+        <button type="submit" className="auth-button" disabled={loading}>
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
-      <div className="auth-footer">
-        <p>Already have an account? 
-          <button type="button" className="link-btn" onClick={onSwitchToLogin}>
-            Sign In
-          </button>
-        </p>
+
+      <div className="auth-switch">
+        <p>Already have an account? <button type="button" onClick={onSwitchToLogin}>Sign in</button></p>
       </div>
     </div>
   );
