@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../auth/AuthProvider';
 import './Login.css';
 
-const Login: React.FC = () => {
+const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +21,7 @@ const Login: React.FC = () => {
     return null;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -61,7 +61,7 @@ const Login: React.FC = () => {
           }, 1000);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An unexpected error occurred');
       console.error('Auth error:', err);
     } finally {

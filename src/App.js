@@ -5,15 +5,9 @@ import RequireAuth from './auth/RequireAuth';
 import DashboardRouter from './components/DashboardRouter';
 import LandingPage from './components/LandingPage';
 import Login from './pages/Login';
-import CreateDealForm from './components/deals/CreateDealForm';
-import DealDiscoveryPage from './components/deals/DealDiscoveryPage';
-import DealsPage from './components/DealsPage';
-import PaymentPage from './components/PaymentPage';
-import PaymentProcessingPage from './components/PaymentProcessingPage';
-import MessagingPage from './components/MessagingPage';
 import './App.css';
 
-function App() {
+const App = () => {
   return (
     <Router>
       <AuthProvider>
@@ -28,12 +22,6 @@ function App() {
             {/* Protected routes - require authentication */}
             <Route element={<RequireAuth />}>
               <Route path="/dashboard/*" element={<DashboardRouter />} />
-              <Route path="/create-deal" element={<CreateDealForm />} />
-              <Route path="/deal-discovery" element={<DealDiscoveryPage />} />
-              <Route path="/deals" element={<DealsPage />} />
-              <Route path="/payment" element={<PaymentPage />} />
-              <Route path="/payment-processing" element={<PaymentProcessingPage />} />
-              <Route path="/messaging" element={<MessagingPage />} />
             </Route>
             
             {/* Catch all - redirect to landing */}
@@ -43,6 +31,6 @@ function App() {
       </AuthProvider>
     </Router>
   );
-}
+};
 
-export default App;
+export default App; 

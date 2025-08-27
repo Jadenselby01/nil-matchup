@@ -1,13 +1,9 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 import Spinner from '../components/Spinner';
 
-interface RequireAuthProps {
-  children: React.ReactNode;
-}
-
-const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
+const RequireAuth = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -18,7 +14,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 };
 
 export default RequireAuth; 
