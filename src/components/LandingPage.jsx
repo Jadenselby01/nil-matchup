@@ -23,14 +23,14 @@ const LandingPage = () => {
     </div>;
   }
 
-  const { session, loading } = auth;
+  const { user, loading } = auth;
 
   if (loading) {
     return <Spinner text="Loading..." />;
   }
 
   // If user is authenticated, immediately redirect to dashboard
-  if (session) {
+  if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 

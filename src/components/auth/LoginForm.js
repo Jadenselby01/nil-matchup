@@ -1,89 +1,111 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
-import { ensureProfile } from '../../utils/ensureProfile';
-import HumanGate from '../HumanGate';
+import { useAuth } from '../../contexts/AuthContext';
 import './AuthForms.css';
 
 const LoginForm = ({ onSwitchToSignup }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState();
-  const [humanOK, setHumanOK] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const onSubmit = async (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError(''); // Clear error when user types
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErr(undefined);
-    
-    if (!humanOK) return setErr('Please verify you are human.');
-    if (!email?.trim() || !password) return setErr('Email and password are required.');
-    
     setLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(), 
-        password
-      });
+      const { data, error } = await signIn(formData.email, formData.password);
       
-      if (error) throw error;
-      
-      await ensureProfile();
-      navigate('/dashboard', { replace: true });
-    } catch (e) {
-      console.error('[SIGNIN ERROR]', e);
-      const errorMessage = e?.message || 'Sign in failed.';
-      const errorCode = e?.code ? ` (code: ${e.code})` : '';
-      const errorDetails = e?.details ? ` details: ${e.details}` : '';
-      setErr(`${errorMessage}${errorCode}${errorDetails}`);
-    } finally { 
-      setLoading(false); 
+      if (error) {
+        setError(error.message);
+      } else if (data?.user) {
+        setSuccess('Login successful! Redirecting...');
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="auth-form">
+    <div className="auth-form-container">
       <h2>Welcome Back</h2>
-      <p>Sign in to your NIL Matchup account</p>
+      <p className="auth-subtitle">Sign in to your NIL Matchup account</p>
       
-      {err && <div className="error-message">{err}</div>}
+      {error && <div className="auth-error">{error}</div>}
+      {success && <div className="auth-success">{success}</div>}
       
-      <form onSubmit={onSubmit}>
+      <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
-          <label htmlFor="email">Email Address *</label>
+          <label htmlFor="email">Email Address</label>
           <input
             type="email"
             id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
             required
-            disabled={loading}
+            placeholder="Enter your email"
+            className="form-input"
           />
         </div>
-
+        
         <div className="form-group">
-          <label htmlFor="password">Password *</label>
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             required
-            disabled={loading}
+            placeholder="Enter your password"
+            className="form-input"
           />
         </div>
-
-        <HumanGate onChange={setHumanOK} />
-
-        <button type="submit" className="auth-button" disabled={loading}>
+        
+        <button 
+          type="submit" 
+          className="auth-button primary"
+          disabled={loading}
+        >
           {loading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
-
+      
       <div className="auth-switch">
-        <p>Don't have an account? <button type="button" onClick={onSwitchToSignup}>Sign up</button></p>
+        <p>
+          Don't have an account?{' '}
+          <button 
+            type="button" 
+            onClick={onSwitchToSignup}
+            className="switch-link"
+          >
+            Sign up here
+          </button>
+        </p>
       </div>
     </div>
   );

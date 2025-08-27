@@ -12,16 +12,18 @@ const ProtectedRoute = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  const { session, loading } = auth;
+  const { user, loading } = auth;
 
   if (loading) {
-    return <Spinner text="Checking authentication..." />;
+    return <Spinner text="Loading..." />;
   }
 
-  if (!session) {
+  // If no user, redirect to auth
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
+  // If user exists, render the protected route
   return <Outlet />;
 };
 

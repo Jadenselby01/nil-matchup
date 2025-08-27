@@ -1,38 +1,31 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { ensureProfile } from '../utils/ensureProfile';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
-
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (!mounted) return;
-        
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-        
-        if (initialSession?.user) {
-          await loadProfile(initialSession.user);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
       } catch (error) {
-        console.error('[AUTH ERROR] Initial session load failed:', error);
+        console.error('Error getting initial session:', error);
+        setUser(null);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
@@ -40,129 +33,93 @@ export function AuthProvider({ children }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!mounted) return;
-        
-        console.log('[AUTH STATE CHANGE]', event, newSession?.user?.id);
-        
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          try {
-            // Ensure profile exists and redirect to dashboard
-            await ensureProfile();
-            await loadProfile(newSession.user);
-            
-            // Redirect to dashboard after successful auth
-            navigate('/dashboard', { replace: true });
-          } catch (error) {
-            console.error('[AUTH ERROR] Profile creation failed:', error);
-            // Still redirect even if profile creation fails
-            navigate('/dashboard', { replace: true });
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          navigate('/', { replace: true });
-        }
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setUser(session?.user || null);
+        setLoading(false);
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const loadProfile = async (user) => {
+  const signUp = async (email, password, role) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: role
+          }
+        }
+      });
 
-      if (error) {
-        console.warn('[AUTH WARNING] Profile not found, will create on next auth event:', error);
-        return;
+      if (error) throw error;
+
+      // Create profile
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              email: data.user.email,
+              role: role
+            }
+          ]);
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+        }
       }
 
-      setProfile(data);
+      return { data, error: null };
     } catch (error) {
-      console.error('[AUTH ERROR] Profile load failed:', error);
+      console.error('Sign up error:', error);
+      return { data: null, error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email, password) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error };
-    } catch (error) {
-      console.error('[AUTH ERROR] Sign in failed:', error);
-      return { error };
-    }
-  };
-
-  const signUp = async (email, password, userType, userData = {}) => {
-    try {
-      const { error } = await supabase.auth.signUp({
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          data: {
-            role: userType,
-            ...userData
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`
-        }
+        password
       });
-      return { error };
+
+      if (error) throw error;
+      return { data, error: null };
     } catch (error) {
-      console.error('[AUTH ERROR] Sign up failed:', error);
-      return { error };
+      console.error('Sign in error:', error);
+      return { data: null, error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
-      console.error('[AUTH ERROR] Sign out failed:', error);
-    }
-  };
-
-  const updateProfile = async (updates) => {
-    if (!user) return { error: 'No user logged in' };
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (!error && data) {
-        setProfile(data);
-      }
-      
-      return { data, error };
-    } catch (error) {
-      console.error('[AUTH ERROR] Profile update failed:', error);
-      return { error };
+      console.error('Sign out error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const value = {
-    session,
     user,
-    profile,
     loading,
-    signIn,
     signUp,
-    signOut,
-    updateProfile,
-    setProfile
+    signIn,
+    signOut
   };
 
   return (
@@ -170,24 +127,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    console.error('[useAuth] Context is null - this should not happen if AuthProvider is wrapping the component');
-    // Return a default context instead of throwing
-    return {
-      session: null,
-      user: null,
-      profile: null,
-      loading: true,
-      signIn: async () => ({ error: new Error('Auth context not available') }),
-      signUp: async () => ({ error: new Error('Auth context not available') }),
-      signOut: async () => {},
-      updateProfile: async () => ({ error: new Error('Auth context not available') }),
-      setProfile: () => {}
-    };
-  }
-  return context;
 }; 

@@ -1,269 +1,187 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
-import { ensureProfile } from '../../utils/ensureProfile';
-import HumanGate from '../HumanGate';
+import { useAuth } from '../../contexts/AuthContext';
 import './AuthForms.css';
 
 const SignupForm = ({ onSwitchToLogin }) => {
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirm: '',
+    confirmPassword: '',
     role: 'athlete',
     firstName: '',
-    lastName: '',
-    sport: '',
-    university: '',
-    companyName: '',
-    companyType: '',
-    bio: ''
+    lastName: ''
   });
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState();
-  const [info, setInfo] = useState();
-  const [humanOK, setHumanOK] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
-  const onSubmit = async (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError(''); // Clear error when user types
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErr(undefined);
-    setInfo(undefined);
-    
-    if (!humanOK) return setErr('Please verify you are human.');
-    if (!form.email?.trim() || !form.password) return setErr('Email and password are required.');
-    if (form.password !== form.confirm) return setErr('Passwords do not match.');
-    
     setLoading(true);
+    setError('');
+    setSuccess('');
+
+    // Simple validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email.trim(),
-        password: form.password,
-        options: {
-          data: {
-            role: form.role,
-            display_name: `${form.firstName} ${form.lastName}`.trim(),
-            sport: form.sport, 
-            university: form.university, 
-            bio: form.bio
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`
-        }
-      });
+      const { data, error } = await signUp(formData.email, formData.password, formData.role);
       
-      if (error) throw error;
-
-      // If confirmations are off (dev) → we have a session now.
-      if (data?.session) {
-        await ensureProfile(form.role);
-        navigate('/dashboard', { replace: true });
-        return;
+      if (error) {
+        setError(error.message);
+      } else if (data?.user) {
+        setSuccess('Account created successfully! Please check your email to confirm your account.');
+        // Redirect to dashboard after successful signup
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       }
-
-      // If confirmations are on → don't treat as an error:
-      setInfo('Check your email to confirm your account. After confirming, you will be redirected to your dashboard.');
-    } catch (e) {
-      console.error('[SIGNUP ERROR]', e);
-      const errorMessage = e?.message || 'Sign up failed.';
-      const errorCode = e?.code ? ` (code: ${e.code})` : '';
-      const errorDetails = e?.details ? ` details: ${e.details}` : '';
-      setErr(`${errorMessage}${errorCode}${errorDetails}`);
-    } finally { 
-      setLoading(false); 
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Signup error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    setErr(undefined);
-    setInfo(undefined);
-  };
-
   return (
-    <div className="auth-form">
+    <div className="auth-form-container">
       <h2>Create Your Account</h2>
-      <p>Join NIL Matchup and start connecting!</p>
+      <p className="auth-subtitle">Join NIL Matchup and start connecting!</p>
       
-      {err && <div className="error-message">{err}</div>}
-      {info && <div className="info-message">{info}</div>}
+      {error && <div className="auth-error">{error}</div>}
+      {success && <div className="auth-success">{success}</div>}
       
-      <form onSubmit={onSubmit}>
+      <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
-          <label>I am a:</label>
-          <div className="user-type-selector">
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="role"
-                value="athlete"
-                checked={form.role === 'athlete'}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-              <span className="radio-custom"></span>
-              Athlete
-            </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="role"
-                value="business"
-                checked={form.role === 'business'}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-              <span className="radio-custom"></span>
-              Business
-            </label>
-          </div>
+          <label htmlFor="role">I am a:</label>
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            required
+            className="form-input"
+          >
+            <option value="athlete">Athlete</option>
+            <option value="business">Business</option>
+          </select>
         </div>
 
         <div className="form-row">
           <div className="form-group">
-            <label>First Name *</label>
+            <label htmlFor="firstName">First Name</label>
             <input
               type="text"
+              id="firstName"
               name="firstName"
-              value={form.firstName}
-              onChange={handleInputChange}
-              required={form.role === 'athlete'}
-              disabled={loading}
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+              placeholder="First name"
+              className="form-input"
             />
           </div>
+          
           <div className="form-group">
-            <label>Last Name *</label>
+            <label htmlFor="lastName">Last Name</label>
             <input
               type="text"
+              id="lastName"
               name="lastName"
-              value={form.lastName}
-              onChange={handleInputChange}
-              required={form.role === 'athlete'}
-              disabled={loading}
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+              placeholder="Last name"
+              className="form-input"
             />
           </div>
         </div>
-
-        {form.role === 'athlete' && (
-          <>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Sport</label>
-                <input
-                  type="text"
-                  name="sport"
-                  value={form.sport}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Football, Basketball"
-                  disabled={loading}
-                />
-              </div>
-              <div className="form-group">
-                <label>University</label>
-                <input
-                  type="text"
-                  name="university"
-                  value={form.university}
-                  onChange={handleInputChange}
-                  placeholder="e.g., UNC Chapel Hill"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {form.role === 'business' && (
-          <>
-            <div className="form-group">
-              <label>Company Name *</label>
-              <input
-                type="text"
-                name="companyName"
-                value={form.companyName}
-                onChange={handleInputChange}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="form-group">
-              <label>Company Type</label>
-              <input
-                type="text"
-                name="companyType"
-                value={form.companyType}
-                onChange={handleInputChange}
-                placeholder="e.g., Restaurant, Retail, Service"
-                disabled={loading}
-              />
-            </div>
-          </>
-        )}
-
+        
         <div className="form-group">
-          <label>Bio</label>
-          <textarea
-            name="bio"
-            value={form.bio}
-            onChange={handleInputChange}
-            placeholder="Tell us about yourself..."
-            rows="3"
-            disabled={loading}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Email Address *</label>
+          <label htmlFor="email">Email Address</label>
           <input
             type="email"
+            id="email"
             name="email"
-            value={form.email}
-            onChange={handleInputChange}
+            value={formData.email}
+            onChange={handleChange}
             required
-            disabled={loading}
+            placeholder="Enter your email"
+            className="form-input"
           />
         </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Password *</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleInputChange}
-              required
-              minLength="6"
-              disabled={loading}
-            />
-          </div>
-          <div className="form-group">
-            <label>Confirm Password *</label>
-            <input
-              type="password"
-              name="confirm"
-              value={form.confirm}
-              onChange={handleInputChange}
-              required
-              minLength="6"
-              disabled={loading}
-            />
-          </div>
+        
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            placeholder="Create a password"
+            className="form-input"
+          />
         </div>
-
-        <HumanGate onChange={setHumanOK} />
-
-        <button type="submit" className="auth-button" disabled={loading}>
+        
+        <div className="form-group">
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            placeholder="Confirm your password"
+            className="form-input"
+          />
+        </div>
+        
+        <button 
+          type="submit" 
+          className="auth-button primary"
+          disabled={loading}
+        >
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
-
+      
       <div className="auth-switch">
-        <p>Already have an account? <button type="button" onClick={onSwitchToLogin}>Sign in</button></p>
+        <p>
+          Already have an account?{' '}
+          <button 
+            type="button" 
+            onClick={onSwitchToLogin}
+            className="switch-link"
+          >
+            Sign in here
+          </button>
+        </p>
       </div>
     </div>
   );
