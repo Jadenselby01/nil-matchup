@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../auth/AuthProvider';
 import Spinner from './Spinner';
 
 const LandingPage = () => {
@@ -15,8 +15,8 @@ const LandingPage = () => {
         <p className="landing-subtitle">Connecting college athletes with local businesses for meaningful partnerships.</p>
         <p className="landing-description">Join our growing community today!</p>
         <div className="landing-buttons">
-          <Link to="/auth" className="landing-btn primary-btn">Create Your Account</Link>
-          <Link to="/auth" className="landing-btn secondary-btn">Sign In</Link>
+          <Link to="/login" className="landing-btn primary-btn">Create Your Account</Link>
+          <Link to="/login" className="landing-btn secondary-btn">Sign In</Link>
         </div>
         <div className="landing-version">v1.0.0</div>
       </div>
@@ -42,8 +42,8 @@ const LandingPage = () => {
         <p className="landing-subtitle">Connecting college athletes with local businesses for meaningful partnerships.</p>
         <p className="landing-description">Join our growing community today!</p>
         <div className="landing-buttons">
-          <Link to="/auth" className="landing-btn primary-btn">Create Your Account</Link>
-          <Link to="/auth" className="landing-btn secondary-btn">Sign In</Link>
+          <Link to="/login" className="landing-btn primary-btn">Create Your Account</Link>
+          <Link to="/login" className="landing-btn secondary-btn">Sign In</Link>
         </div>
         <div className="landing-version">v1.0.0</div>
       </div>

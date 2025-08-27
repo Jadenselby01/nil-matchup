@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './auth/AuthProvider';
+import RequireAuth from './auth/RequireAuth';
 import DashboardRouter from './components/DashboardRouter';
 import LandingPage from './components/LandingPage';
-import AuthPage from './components/auth/AuthPage';
+import Login from './pages/Login';
 import CreateDealForm from './components/deals/CreateDealForm';
 import DealDiscoveryPage from './components/deals/DealDiscoveryPage';
 import DealsPage from './components/DealsPage';
@@ -22,11 +22,11 @@ function App() {
             {/* Landing page - redirects authenticated users to dashboard */}
             <Route path="/" element={<LandingPage />} />
             
-            {/* Auth page - for unauthenticated users */}
-            <Route path="/auth" element={<AuthPage />} />
+            {/* Login page - for unauthenticated users */}
+            <Route path="/login" element={<Login />} />
             
             {/* Protected routes - require authentication */}
-            <Route element={<ProtectedRoute />}>
+            <Route element={<RequireAuth />}>
               <Route path="/dashboard/*" element={<DashboardRouter />} />
               <Route path="/create-deal" element={<CreateDealForm />} />
               <Route path="/deal-discovery" element={<DealDiscoveryPage />} />

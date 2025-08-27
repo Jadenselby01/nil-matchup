@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../lib/supabaseClient';
 import AthleteDashboard from './dashboard/AthleteDashboard';
 import BusinessDashboard from './dashboard/BusinessDashboard';
@@ -13,8 +13,8 @@ const DashboardRouter = () => {
   
   // Handle case where useAuth returns null
   if (!auth) {
-    console.error('[DashboardRouter] useAuth() returned null - redirecting to auth');
-    return <Navigate to="/auth" replace />;
+    console.error('[DashboardRouter] useAuth() returned null - redirecting to login');
+    return <Navigate to="/login" replace />;
   }
 
   const { user } = auth;
