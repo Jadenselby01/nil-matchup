@@ -9,7 +9,7 @@ const DashboardRouter = () => {
   const { profile, loading } = useAuth();
 
   if (loading) {
-    return <Spinner />;
+    return <Spinner text="Loading dashboard..." />;
   }
 
   if (!profile) {

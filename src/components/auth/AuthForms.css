@@ -303,3 +303,20 @@
     gap: 10px;
   }
 } 
+
+/* Info Message Styling */
+.info-message {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.info-message::before {
+  content: "ℹ️ ";
+  margin-right: 8px;
+} 

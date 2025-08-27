@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { ensureProfile } from '../../utils/ensureProfile';
 import HumanGate from '../HumanGate';
@@ -14,7 +13,6 @@ const LoginForm = ({ onSwitchToSignup }) => {
   const [humanOK, setHumanOK] = useState(false);
   
   const navigate = useNavigate();
-  const { signIn } = useAuth();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +33,11 @@ const LoginForm = ({ onSwitchToSignup }) => {
       await ensureProfile();
       navigate('/dashboard', { replace: true });
     } catch (e) {
-      setErr(e?.message ?? 'Sign in failed.');
+      console.error('[SIGNIN ERROR]', e);
+      const errorMessage = e?.message || 'Sign in failed.';
+      const errorCode = e?.code ? ` (code: ${e.code})` : '';
+      const errorDetails = e?.details ? ` details: ${e.details}` : '';
+      setErr(`${errorMessage}${errorCode}${errorDetails}`);
     } finally { 
       setLoading(false); 
     }

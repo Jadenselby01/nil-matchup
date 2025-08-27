@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { ensureProfile } from '../../utils/ensureProfile';
 import HumanGate from '../HumanGate';
@@ -22,14 +21,15 @@ const SignupForm = ({ onSwitchToLogin }) => {
   });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState();
+  const [info, setInfo] = useState();
   const [humanOK, setHumanOK] = useState(false);
   
   const navigate = useNavigate();
-  const { signUp } = useAuth();
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setErr(undefined);
+    setInfo(undefined);
     
     if (!humanOK) return setErr('Please verify you are human.');
     if (!form.email?.trim() || !form.password) return setErr('Email and password are required.');
@@ -37,7 +37,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
     
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
         options: {
@@ -53,11 +53,22 @@ const SignupForm = ({ onSwitchToLogin }) => {
       });
       
       if (error) throw error;
-      
-      await ensureProfile(form.role);
-      navigate('/dashboard', { replace: true });
+
+      // If confirmations are off (dev) → we have a session now.
+      if (data?.session) {
+        await ensureProfile(form.role);
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+
+      // If confirmations are on → don't treat as an error:
+      setInfo('Check your email to confirm your account. After confirming, you will be redirected to your dashboard.');
     } catch (e) {
-      setErr(e?.message ?? 'Sign up failed.');
+      console.error('[SIGNUP ERROR]', e);
+      const errorMessage = e?.message || 'Sign up failed.';
+      const errorCode = e?.code ? ` (code: ${e.code})` : '';
+      const errorDetails = e?.details ? ` details: ${e.details}` : '';
+      setErr(`${errorMessage}${errorCode}${errorDetails}`);
     } finally { 
       setLoading(false); 
     }
@@ -70,6 +81,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
     setErr(undefined);
+    setInfo(undefined);
   };
 
   return (
@@ -78,6 +90,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
       <p>Join NIL Matchup and start connecting!</p>
       
       {err && <div className="error-message">{err}</div>}
+      {info && <div className="info-message">{info}</div>}
       
       <form onSubmit={onSubmit}>
         <div className="form-group">

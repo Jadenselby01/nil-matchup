@@ -11,7 +11,7 @@ const LandingPage = () => {
     return <Spinner text="Loading..." />;
   }
 
-  // If user is authenticated, redirect to dashboard
+  // If user is authenticated, immediately redirect to dashboard
   if (session) {
     return <Navigate to="/dashboard" replace />;
   }

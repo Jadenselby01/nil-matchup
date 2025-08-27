@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
           await loadProfile(initialSession.user);
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('[AUTH ERROR] Initial session load failed:', error);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
       async (event, newSession) => {
         if (!mounted) return;
         
-        console.log('Auth state change:', event, newSession?.user?.id);
+        console.log('[AUTH STATE CHANGE]', event, newSession?.user?.id);
         
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -57,7 +57,7 @@ export function AuthProvider({ children }) {
             // Redirect to dashboard after successful auth
             navigate('/dashboard', { replace: true });
           } catch (error) {
-            console.error('Error ensuring profile:', error);
+            console.error('[AUTH ERROR] Profile creation failed:', error);
             // Still redirect even if profile creation fails
             navigate('/dashboard', { replace: true });
           }
@@ -83,21 +83,22 @@ export function AuthProvider({ children }) {
         .single();
 
       if (error) {
-        console.warn('Profile not found, will create on next auth event:', error);
+        console.warn('[AUTH WARNING] Profile not found, will create on next auth event:', error);
         return;
       }
 
       setProfile(data);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error('[AUTH ERROR] Profile load failed:', error);
     }
   };
 
-  const signIn = async (email, password, remember = true) => {
+  const signIn = async (email, password) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error };
     } catch (error) {
+      console.error('[AUTH ERROR] Sign in failed:', error);
       return { error };
     }
   };
@@ -117,6 +118,7 @@ export function AuthProvider({ children }) {
       });
       return { error };
     } catch (error) {
+      console.error('[AUTH ERROR] Sign up failed:', error);
       return { error };
     }
   };
@@ -125,7 +127,7 @@ export function AuthProvider({ children }) {
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('[AUTH ERROR] Sign out failed:', error);
     }
   };
 
@@ -146,6 +148,7 @@ export function AuthProvider({ children }) {
       
       return { data, error };
     } catch (error) {
+      console.error('[AUTH ERROR] Profile update failed:', error);
       return { error };
     }
   };
