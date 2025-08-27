@@ -175,7 +175,19 @@ export function AuthProvider({ children }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    console.error('[useAuth] Context is null - this should not happen if AuthProvider is wrapping the component');
+    // Return a default context instead of throwing
+    return {
+      session: null,
+      user: null,
+      profile: null,
+      loading: true,
+      signIn: async () => ({ error: new Error('Auth context not available') }),
+      signUp: async () => ({ error: new Error('Auth context not available') }),
+      signOut: async () => {},
+      updateProfile: async () => ({ error: new Error('Auth context not available') }),
+      setProfile: () => {}
+    };
   }
   return context;
 }; 

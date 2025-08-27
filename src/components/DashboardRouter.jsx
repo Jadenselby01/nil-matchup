@@ -6,13 +6,22 @@ import BusinessDashboard from './dashboard/BusinessDashboard';
 import Spinner from './Spinner';
 
 const DashboardRouter = () => {
-  const { profile, loading } = useAuth();
+  const auth = useAuth();
+  
+  // Handle case where useAuth returns null
+  if (!auth) {
+    console.error('[DashboardRouter] useAuth() returned null - redirecting to auth');
+    return <Navigate to="/auth" replace />;
+  }
+
+  const { profile, loading } = auth;
 
   if (loading) {
     return <Spinner text="Loading dashboard..." />;
   }
 
   if (!profile) {
+    console.log('[DashboardRouter] No profile found - redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
