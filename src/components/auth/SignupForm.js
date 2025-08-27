@@ -1,168 +1,75 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { supabase } from '../../lib/supabaseClient';
+import { ensureProfile } from '../../utils/ensureProfile';
+import HumanGate from '../HumanGate';
 import './AuthForms.css';
 
 const SignupForm = ({ onSwitchToLogin }) => {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
-    userType: 'athlete',
+    confirm: '',
+    role: 'athlete',
     firstName: '',
     lastName: '',
     sport: '',
     university: '',
     companyName: '',
     companyType: '',
-    bio: '',
-    agreeToTerms: false,
-    agreeToPrivacy: false
+    bio: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [remember, setRemember] = useState(true);
-  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const [err, setErr] = useState();
+  const [humanOK, setHumanOK] = useState(false);
   
+  const navigate = useNavigate();
   const { signUp } = useAuth();
 
-  const validateForm = () => {
-    console.log('=== FORM VALIDATION START ===');
-    console.log('Email:', formData.email);
-    console.log('Password length:', formData.password?.length);
-    console.log('Passwords match:', formData.password === formData.confirmPassword);
-    console.log('Terms agreed:', formData.agreeToTerms);
-    console.log('Privacy agreed:', formData.agreeToPrivacy);
-    console.log('reCAPTCHA token:', recaptchaToken);
-    console.log('User type:', formData.userType);
-    console.log('First name:', formData.firstName);
-    console.log('Last name:', formData.lastName);
-    
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      console.log('❌ Missing required fields');
-      setError('Please fill in all required fields');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      console.log('❌ Passwords do not match');
-      setError('Passwords do not match');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      console.log('❌ Password too short');
-      setError('Password must be at least 6 characters long');
-      return false;
-    }
-    if (!formData.agreeToTerms || !formData.agreeToPrivacy) {
-      console.log('❌ Terms not agreed to');
-      setError('Please agree to the terms and privacy policy');
-      return false;
-    }
-    if (!recaptchaToken) {
-      console.log('❌ reCAPTCHA not completed');
-      setError('Please complete the human verification');
-      return false;
-    }
-    if (formData.userType === 'athlete' && (!formData.firstName || !formData.lastName)) {
-      console.log('❌ Missing athlete name');
-      setError('Please provide your first and last name');
-      return false;
-    }
-    if (formData.userType === 'business' && !formData.companyName) {
-      console.log('❌ Missing company name');
-      setError('Please provide your company name');
-      return false;
-    }
-    
-    console.log('✅ Form validation passed!');
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
+    setErr(undefined);
     
-    // Debug logging
-    console.log('Form submission started');
-    console.log('reCAPTCHA token:', recaptchaToken);
-    console.log('Form data:', formData);
-    
-    if (!validateForm()) return;
+    if (!humanOK) return setErr('Please verify you are human.');
+    if (!form.email?.trim() || !form.password) return setErr('Email and password are required.');
+    if (form.password !== form.confirm) return setErr('Passwords do not match.');
     
     setLoading(true);
-    setError('');
-    setSuccess('');
-
     try {
-      // Prepare user data for signup
-      const userData = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        display_name: `${formData.firstName} ${formData.lastName}`.trim()
-      };
-
-      if (formData.userType === 'athlete') {
-        userData.sport = formData.sport;
-        userData.university = formData.university;
-        userData.bio = formData.bio;
-      } else if (formData.userType === 'business') {
-        userData.company_name = formData.companyName;
-        userData.company_type = formData.companyType;
-        userData.bio = formData.bio;
-      }
-
-      console.log('Attempting signup with data:', userData);
-
-      // Create user account with role in metadata
-      const { error: signUpError } = await signUp(
-        formData.email, 
-        formData.password, 
-        formData.userType,
-        userData
-      );
-
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
-        setError(signUpError.message || 'Failed to create account. Please try again.');
-        return;
-      }
-
-      // Success - AuthContext will handle profile creation and redirect
-      setSuccess('Account created successfully! Redirecting to dashboard...');
+      const { error } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+        options: {
+          data: {
+            role: form.role,
+            display_name: `${form.firstName} ${form.lastName}`.trim(),
+            sport: form.sport, 
+            university: form.university, 
+            bio: form.bio
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
       
-    } catch (err) {
-      console.error('Unexpected error during sign up:', err);
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
+      if (error) throw error;
+      
+      await ensureProfile(form.role);
+      navigate('/dashboard', { replace: true });
+    } catch (e) {
+      setErr(e?.message ?? 'Sign up failed.');
+    } finally { 
+      setLoading(false); 
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    setError(''); // Clear error when user types
-  };
-
-  const handleRecaptchaChange = (token) => {
-    console.log('reCAPTCHA token received:', token);
-    setRecaptchaToken(token);
-    setError(''); // Clear any previous errors
-  };
-
-  const handleRecaptchaExpired = () => {
-    console.log('reCAPTCHA expired');
-    setRecaptchaToken(null);
-    setError('Human verification expired. Please complete it again.');
-  };
-
-  const handleRecaptchaError = () => {
-    console.log('reCAPTCHA error');
-    setRecaptchaToken(null);
-    setError('Human verification failed. Please try again.');
+    setErr(undefined);
   };
 
   return (
@@ -170,19 +77,18 @@ const SignupForm = ({ onSwitchToLogin }) => {
       <h2>Create Your Account</h2>
       <p>Join NIL Matchup and start connecting!</p>
       
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      {err && <div className="error-message">{err}</div>}
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={onSubmit}>
         <div className="form-group">
           <label>I am a:</label>
           <div className="user-type-selector">
             <label className="radio-label">
               <input
                 type="radio"
-                name="userType"
+                name="role"
                 value="athlete"
-                checked={formData.userType === 'athlete'}
+                checked={form.role === 'athlete'}
                 onChange={handleInputChange}
                 disabled={loading}
               />
@@ -192,9 +98,9 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <label className="radio-label">
               <input
                 type="radio"
-                name="userType"
+                name="role"
                 value="business"
-                checked={formData.userType === 'business'}
+                checked={form.role === 'business'}
                 onChange={handleInputChange}
                 disabled={loading}
               />
@@ -210,9 +116,9 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <input
               type="text"
               name="firstName"
-              value={formData.firstName}
+              value={form.firstName}
               onChange={handleInputChange}
-              required={formData.userType === 'athlete'}
+              required={form.role === 'athlete'}
               disabled={loading}
             />
           </div>
@@ -221,15 +127,15 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <input
               type="text"
               name="lastName"
-              value={formData.lastName}
+              value={form.lastName}
               onChange={handleInputChange}
-              required={formData.userType === 'athlete'}
+              required={form.role === 'athlete'}
               disabled={loading}
             />
           </div>
         </div>
 
-        {formData.userType === 'athlete' && (
+        {form.role === 'athlete' && (
           <>
             <div className="form-row">
               <div className="form-group">
@@ -237,7 +143,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
                 <input
                   type="text"
                   name="sport"
-                  value={formData.sport}
+                  value={form.sport}
                   onChange={handleInputChange}
                   placeholder="e.g., Football, Basketball"
                   disabled={loading}
@@ -248,7 +154,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
                 <input
                   type="text"
                   name="university"
-                  value={formData.university}
+                  value={form.university}
                   onChange={handleInputChange}
                   placeholder="e.g., UNC Chapel Hill"
                   disabled={loading}
@@ -258,14 +164,14 @@ const SignupForm = ({ onSwitchToLogin }) => {
           </>
         )}
 
-        {formData.userType === 'business' && (
+        {form.role === 'business' && (
           <>
             <div className="form-group">
               <label>Company Name *</label>
               <input
                 type="text"
                 name="companyName"
-                value={formData.companyName}
+                value={form.companyName}
                 onChange={handleInputChange}
                 required
                 disabled={loading}
@@ -276,7 +182,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
               <input
                 type="text"
                 name="companyType"
-                value={formData.companyType}
+                value={form.companyType}
                 onChange={handleInputChange}
                 placeholder="e.g., Restaurant, Retail, Service"
                 disabled={loading}
@@ -289,7 +195,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
           <label>Bio</label>
           <textarea
             name="bio"
-            value={formData.bio}
+            value={form.bio}
             onChange={handleInputChange}
             placeholder="Tell us about yourself..."
             rows="3"
@@ -302,7 +208,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
           <input
             type="email"
             name="email"
-            value={formData.email}
+            value={form.email}
             onChange={handleInputChange}
             required
             disabled={loading}
@@ -315,7 +221,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <input
               type="password"
               name="password"
-              value={formData.password}
+              value={form.password}
               onChange={handleInputChange}
               required
               minLength="6"
@@ -326,8 +232,8 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <label>Confirm Password *</label>
             <input
               type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
+              name="confirm"
+              value={form.confirm}
               onChange={handleInputChange}
               required
               minLength="6"
@@ -336,90 +242,10 @@ const SignupForm = ({ onSwitchToLogin }) => {
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="agreeToTerms"
-              checked={formData.agreeToTerms}
-              onChange={handleInputChange}
-              disabled={loading}
-            />
-            <span className="checkmark"></span>
-            I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a> *
-          </label>
-        </div>
-
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="agreeToPrivacy"
-              checked={formData.agreeToPrivacy}
-              onChange={handleInputChange}
-              disabled={loading}
-            />
-            <span className="checkmark"></span>
-            I agree to the <a href="/privacy-policy" target="_blank">Privacy Policy</a> *
-          </label>
-        </div>
-
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="remember"
-              checked={formData.remember}
-              onChange={handleInputChange}
-              disabled={loading}
-            />
-            <span className="checkmark"></span>
-            Remember me (stay logged in)
-          </label>
-        </div>
-
-        <div className="form-group">
-          <label>Human Verification *</label>
-          <div className="recaptcha-container">
-            <ReCAPTCHA
-              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-              onChange={handleRecaptchaChange}
-              onExpired={handleRecaptchaExpired}
-              onError={handleRecaptchaError}
-            />
-          </div>
-          {recaptchaToken && (
-            <div className="recaptcha-success">
-              ✅ Human verification completed
-            </div>
-          )}
-        </div>
+        <HumanGate onChange={setHumanOK} />
 
         <button type="submit" className="auth-button" disabled={loading}>
           {loading ? 'Creating Account...' : 'Create Account'}
-        </button>
-        
-        {/* Debug button - remove this after testing */}
-        <button 
-          type="button" 
-          className="debug-button" 
-          onClick={() => {
-            console.log('=== DEBUG BUTTON CLICKED ===');
-            console.log('Form data:', formData);
-            console.log('reCAPTCHA token:', recaptchaToken);
-            console.log('Validation result:', validateForm());
-          }}
-          style={{ 
-            marginTop: '10px', 
-            padding: '8px 16px', 
-            backgroundColor: '#ff9800', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}
-        >
-          🐛 Debug Form (Click to see console logs)
         </button>
       </form>
 

@@ -51,8 +51,8 @@ export function AuthProvider({ children }) {
         if (event === 'SIGNED_IN' && newSession?.user) {
           try {
             // Ensure profile exists and redirect to dashboard
-            const userProfile = await ensureProfile(newSession.user);
-            setProfile(userProfile);
+            await ensureProfile();
+            await loadProfile(newSession.user);
             
             // Redirect to dashboard after successful auth
             navigate('/dashboard', { replace: true });
@@ -111,7 +111,8 @@ export function AuthProvider({ children }) {
           data: {
             role: userType,
             ...userData
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
       return { error };
@@ -157,7 +158,8 @@ export function AuthProvider({ children }) {
     signIn,
     signUp,
     signOut,
-    updateProfile
+    updateProfile,
+    setProfile
   };
 
   return (

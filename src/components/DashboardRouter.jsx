@@ -1,42 +1,27 @@
-import React, { useEffect } from 'react';
-import { useNavigate, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AthleteDashboard from './dashboard/AthleteDashboard';
 import BusinessDashboard from './dashboard/BusinessDashboard';
+import Spinner from './Spinner';
 
 const DashboardRouter = () => {
   const { profile, loading } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && profile) {
-      // Auto-redirect to role-specific dashboard
-      const rolePath = `/dashboard/${profile.role}`;
-      if (window.location.pathname !== rolePath) {
-        navigate(rolePath, { replace: true });
-      }
-    }
-  }, [profile, loading, navigate]);
+  if (loading) {
+    return <Spinner />;
+  }
 
-  if (loading || !profile) {
-    return (
-      <div className="dashboard-loading">
-        <div className="spinner"></div>
-        <p>Loading your dashboard...</p>
-      </div>
-    );
+  if (!profile) {
+    return <Navigate to="/auth" replace />;
   }
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate to={`/dashboard/${profile.role}`} replace />} />
       <Route path="/athlete" element={<AthleteDashboard />} />
       <Route path="/business" element={<BusinessDashboard />} />
-      <Route path="/" element={
-        <div className="dashboard-loading">
-          <div className="spinner"></div>
-          <p>Redirecting to your dashboard...</p>
-        </div>
-      } />
+      <Route path="*" element={<Navigate to={`/dashboard/${profile.role}`} replace />} />
     </Routes>
   );
 };

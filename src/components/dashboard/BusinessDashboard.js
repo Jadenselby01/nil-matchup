@@ -1,214 +1,123 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import './Dashboard.css';
 
-const BusinessDashboard = ({ onNavigate }) => {
-  const { user, profile, signOut } = useAuth();
+const BusinessDashboard = () => {
+  const { profile, signOut } = useAuth();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState({
+    totalDeals: 0,
+    activeDeals: 0,
+    totalSpent: 0,
+    pendingDeals: 0
+  });
 
   useEffect(() => {
-    // Fetch business deals from the database
-    fetchBusinessDeals();
+    loadBusinessData();
   }, []);
 
-  const fetchBusinessDeals = async () => {
+  const loadBusinessData = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with real API call to Supabase
-      // const { data, error } = await supabase
-      //   .from('deals')
-      //   .select('*')
-      //   .eq('business_id', user.id)
-      //   .order('created_at', { ascending: false });
+      
+      // Load deals created by this business
+      const { data: dealsData, error: dealsError } = await supabase
+        .from('deals')
+        .select('*')
+        .eq('business_id', profile?.id)
+        .order('created_at', { ascending: false });
 
-      // For now, show empty state
-      setDeals([]);
+      if (dealsError) {
+        console.error('Error loading deals:', dealsError);
+      } else {
+        setDeals(dealsData || []);
+      }
+
+      // Calculate stats
+      const totalDeals = dealsData?.length || 0;
+      const activeDeals = dealsData?.filter(d => d.status === 'active').length || 0;
+      const totalSpent = dealsData?.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
+      const pendingDeals = dealsData?.filter(d => d.status === 'pending').length || 0;
+
+      setStats({
+        totalDeals,
+        activeDeals,
+        totalSpent,
+        pendingDeals
+      });
+
     } catch (error) {
-      console.error('Error fetching deals:', error);
+      console.error('Error loading business data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
-  const handleCreateDeal = () => {
-    if (onNavigate) {
-      onNavigate('create-deal');
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'status-active';
-      case 'pending': return 'status-pending';
-      case 'completed': return 'status-completed';
-      default: return 'status-default';
-    }
+    await signOut();
   };
 
   if (loading) {
     return (
       <div className="dashboard-loading">
         <div className="spinner"></div>
-        <p>Loading your dashboard...</p>
+        <p>Loading your business dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <div className="dashboard-header-content">
-          <div className="user-info">
-            <div className="user-avatar business">
-              {profile?.company_name?.charAt(0) || profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'B'}
-            </div>
-            <div className="user-details">
-              <h1>Welcome back, {profile?.company_name || profile?.full_name || 'Business'}!</h1>
-              <p>{profile?.company_type || 'Business Partner'}</p>
-            </div>
-          </div>
-          <button className="sign-out-btn" onClick={handleSignOut}>
-            Sign Out
-          </button>
+    <div className="dashboard business-dashboard">
+      <div className="dashboard-header">
+        <h1>Welcome back, {profile?.display_name || profile?.company_name || 'Business'}!</h1>
+        <button onClick={handleSignOut} className="signout-button">Sign Out</button>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h3>Total Deals</h3>
+          <p className="stat-number">{stats.totalDeals}</p>
         </div>
-      </header>
+        <div className="stat-card">
+          <h3>Active Deals</h3>
+          <p className="stat-number">{stats.activeDeals}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Total Spent</h3>
+          <p className="stat-number">${stats.totalSpent.toLocaleString()}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Pending Deals</h3>
+          <p className="stat-number">{stats.pendingDeals}</p>
+        </div>
+      </div>
 
-      <div className="dashboard-content">
-        <nav className="dashboard-nav">
-          <button
-            className={`nav-tab ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'deals' ? 'active' : ''}`}
-            onClick={() => setActiveTab('deals')}
-          >
-            My Deals
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'athletes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('athletes')}
-          >
-            Discover Athletes
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'create' ? 'active' : ''}`}
-            onClick={() => setActiveTab('create')}
-          >
-            Create Deal
-          </button>
-        </nav>
-
-        <main className="dashboard-main">
-          {activeTab === 'overview' && (
-            <div className="overview-tab">
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <h3>Active Deals</h3>
-                  <p className="stat-number">{deals.filter(d => d.status === 'active').length}</p>
-                </div>
-                <div className="stat-card">
-                  <h3>Total Spent</h3>
-                  <p className="stat-number">${deals.reduce((sum, d) => sum + (d.status === 'completed' ? d.amount : 0), 0)}</p>
-                </div>
-                <div className="stat-card">
-                  <h3>Pending Deals</h3>
-                  <p className="stat-number">{deals.filter(d => d.status === 'pending').length}</p>
+      <div className="dashboard-section">
+        <h2>Recent Deals</h2>
+        {deals.length > 0 ? (
+          <div className="deals-list">
+            {deals.slice(0, 5).map((deal) => (
+              <div key={deal.id} className="deal-card">
+                <h4>{deal.title}</h4>
+                <p>{deal.description}</p>
+                <div className="deal-meta">
+                  <span className="deal-amount">${deal.amount}</span>
+                  <span className={`deal-status deal-${deal.status}`}>{deal.status}</span>
                 </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <p className="no-data">No deals created yet. Start posting opportunities!</p>
+        )}
+      </div>
 
-              <div className="recent-activity">
-                <h3>Recent Activity</h3>
-                <div className="activity-list">
-                  {deals.slice(0, 3).map(deal => (
-                    <div key={deal.id} className="activity-item">
-                      <div className="activity-icon">📋</div>
-                      <div className="activity-content">
-                        <p><strong>{deal.title}</strong> - {deal.athlete_name}</p>
-                        <small>${deal.amount} • {deal.status}</small>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'deals' && (
-            <div className="deals-tab">
-              <div className="deals-header">
-                <h3>My Deals</h3>
-                <button className="btn-primary" onClick={handleCreateDeal}>
-                  Create New Deal
-                </button>
-              </div>
-              
-              {deals.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">📋</div>
-                  <h4>No Deals Yet</h4>
-                  <p>You haven't created any deals yet. Start by creating your first NIL opportunity!</p>
-                  <button className="btn-primary" onClick={handleCreateDeal}>
-                    Create Your First Deal
-                  </button>
-                </div>
-              ) : (
-                <div className="deals-list">
-                  {deals.map(deal => (
-                    <div key={deal.id} className="deal-card">
-                      <div className="deal-header">
-                        <h4>{deal.title}</h4>
-                        <span className={`status-badge ${getStatusColor(deal.status)}`}>
-                          {deal.status}
-                        </span>
-                      </div>
-                      <div className="deal-details">
-                        <p><strong>Athlete:</strong> {deal.athlete_name || 'Unassigned'}</p>
-                        <p><strong>Amount:</strong> ${deal.amount}</p>
-                        <p><strong>Deadline:</strong> {deal.deadline}</p>
-                      </div>
-                      <div className="deal-actions">
-                        <button className="btn-secondary">View Details</button>
-                        {deal.status === 'open' && (
-                          <button className="btn-primary">Edit Deal</button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'athletes' && (
-            <div className="athletes-tab">
-              <h3>Discover Athletes</h3>
-              <div className="athletes-grid">
-                {/* Athletes data is not fetched, so this will be empty */}
-                <p>No athletes found. Please check back later or create a new deal.</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'create' && (
-            <div className="create-deal-tab">
-              <h3>Create New Deal</h3>
-              <p>Click the "Create New Deal" button in the Deals tab to get started.</p>
-            </div>
-          )}
-        </main>
+      <div className="dashboard-actions">
+        <button className="action-button primary">Create New Deal</button>
+        <button className="action-button secondary">View Messages</button>
+        <button className="action-button secondary">Manage Deals</button>
       </div>
     </div>
   );
