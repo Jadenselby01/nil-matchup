@@ -12,21 +12,14 @@ const DashboardRouter = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Handle case where useAuth returns null
-  if (!auth) {
-    console.error('[DashboardRouter] useAuth() returned null - redirecting to login');
-    return <Navigate to="/login" replace />;
-  }
-
-  const { user } = auth;
-
+  // Load profile when user changes
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', auth?.user?.id)
           .single();
 
         if (error) {
@@ -44,10 +37,10 @@ const DashboardRouter = () => {
       }
     };
 
-    if (user) {
+    if (auth?.user) {
       loadProfile();
     }
-  }, [user]);
+  }, [auth?.user]);
 
   const handleSignOut = async () => {
     try {
@@ -57,6 +50,12 @@ const DashboardRouter = () => {
       console.error('Sign out error:', error);
     }
   };
+
+  // Handle case where useAuth returns null - redirect to login
+  if (!auth) {
+    console.error('[DashboardRouter] useAuth() returned null - redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
 
   if (loading) {
     return <Spinner text="Loading your dashboard..." />;
