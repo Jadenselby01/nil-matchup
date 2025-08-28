@@ -70,6 +70,58 @@ Required environment variables for deployment:
 | `REACT_APP_JWT_SECRET` | JWT signing secret | `your-secret-key` |
 | `REACT_APP_ENCRYPTION_KEY` | Data encryption key | `32-char-key` |
 
+## 🔐 Password Reset Setup
+
+To enable password reset functionality:
+
+1. **Supabase Auth Configuration:**
+   - Go to Supabase Dashboard → Authentication → URL Configuration
+   - Add your production domain to **Site URL**
+   - Add `/reset-password` to **Additional Redirect URLs**
+   - Ensure your domain is in **CORS Origins**
+
+2. **Vercel Environment Variables:**
+   - After updating Supabase settings, redeploy on Vercel
+   - Ensure `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` are set
+
+3. **Testing Password Reset:**
+   - Use the "Forgot password?" button on the login page
+   - Check email for reset link
+   - Set new password on reset page
+
+## 🔧 Supabase Auth Configuration
+
+**IMPORTANT:** Configure Supabase Auth settings for production deployment:
+
+### **Site URL:**
+```
+https://nil-matchup-deploy.vercel.app
+```
+
+### **Additional Redirect URLs:**
+```
+https://nil-matchup-deploy.vercel.app
+https://nil-matchup-deploy.vercel.app/auth/callback
+https://nil-matchup-deploy.vercel.app/reset-password
+http://localhost:3000
+http://localhost:3000/auth/callback
+http://localhost:3000/reset-password
+```
+
+### **CORS Origins:**
+```
+https://nil-matchup-deploy.vercel.app
+http://localhost:3000
+```
+
+### **Steps:**
+1. Go to Supabase Dashboard → Authentication → URL Configuration
+2. Set Site URL to your Vercel domain
+3. Add all redirect URLs above
+4. Add both hosts to CORS Origins
+5. Save changes
+6. Redeploy on Vercel after environment variable changes
+
 ## 🔒 Security Features
 
 - End-to-end encryption

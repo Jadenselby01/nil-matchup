@@ -38,7 +38,7 @@ const DealDiscoveryPage = ({ onBack, onDealSelected }) => {
       // Mock data for now
       const mockDeals = [
         {
-          id: 'deal-1',
+          // id will come from database
           business_name: 'Local Sports Shop',
           title: 'Social Media Campaign for New Equipment Line',
           description: 'Promote our latest sports equipment on Instagram and TikTok. Looking for athletes with strong social media presence.',
@@ -58,7 +58,7 @@ const DealDiscoveryPage = ({ onBack, onDealSelected }) => {
           created_at: '2024-01-15'
         },
         {
-          id: 'deal-2',
+          // id will come from database
           business_name: 'Fitness Brand Co.',
           title: 'Product Endorsement Campaign',
           description: 'Feature our new fitness apparel in your workout content. Perfect for athletes who love fitness and fashion.',
@@ -78,7 +78,7 @@ const DealDiscoveryPage = ({ onBack, onDealSelected }) => {
           created_at: '2024-01-20'
         },
         {
-          id: 'deal-3',
+          // id will come from database
           business_name: 'Local Restaurant',
           title: 'Food Review and Promotion',
           description: 'Visit our restaurant and create content about your experience. Share on social media with your followers.',
