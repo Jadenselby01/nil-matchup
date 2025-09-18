@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+﻿import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './dashboard/Dashboard.css';
 
-const DashboardRouter = () => {
+const DemoDashboard = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const role = searchParams.get('role') || 'athlete';
   const [activeTab, setActiveTab] = useState('opportunities');
 
-  // Sample businesses for athletes to see
-  const businesses = [
+  const opportunities = [
     {
       id: 1,
       name: 'Carolina Sports Bar & Grill',
@@ -36,34 +33,6 @@ const DashboardRouter = () => {
     }
   ];
 
-  // Sample athletes for businesses to see
-  const athletes = [
-    {
-      id: 1,
-      name: 'Jaden Selby',
-      sport: 'FOOTBALL',
-      school: 'UNC Chapel Hill',
-      description: 'Starting quarterback with 2,500+ passing yards this season. Active on social media with 50K+ followers.',
-      buttons: ['SOCIAL MEDIA', 'EVENT APPEARANCES']
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      sport: 'BASKETBALL',
-      school: 'Duke University',
-      description: 'Point guard with excellent leadership skills. Great for brand partnerships and community events.',
-      buttons: ['BRAND AMBASSADOR', 'COMMUNITY EVENTS']
-    },
-    {
-      id: 3,
-      name: 'Mike Rodriguez',
-      sport: 'BASEBALL',
-      school: 'NC State',
-      description: 'Pitcher with strong local following. Perfect for sports-related endorsements and appearances.',
-      buttons: ['SPORTS ENDORSEMENTS', 'LOCAL APPEARANCES']
-    }
-  ];
-
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     if (tab === 'deals') {
@@ -75,21 +44,11 @@ const DashboardRouter = () => {
     }
   };
 
-  const handleSignOut = () => {
-    navigate('/');
-  };
-
-  const isAthlete = role === 'athlete';
-  const displayData = isAthlete ? businesses : athletes;
-  const title = isAthlete ? 'Jaden Selby\'s Dashboard' : 'Business Dashboard';
-  const welcomeText = isAthlete ? 'Welcome back, Jaden Selby!' : 'Welcome back, Business Owner!';
-
   return (
     <div className="demo-dashboard">
       <div className="dashboard-header">
-        <h1>{title}</h1>
-        <p className="welcome-text">{welcomeText}</p>
-        <button onClick={handleSignOut} className="signout-button">Sign Out</button>
+        <h1>Jaden Selby's Dashboard</h1>
+        <p className="welcome-text">Welcome back, Jaden Selby!</p>
       </div>
 
       <div className="dashboard-nav">
@@ -97,7 +56,7 @@ const DashboardRouter = () => {
           className={`nav-btn ${activeTab === 'opportunities' ? 'active' : ''}`}
           onClick={() => setActiveTab('opportunities')}
         >
-          {isAthlete ? 'NIL OPPORTUNITIES' : 'AVAILABLE ATHLETES'}
+          NIL OPPORTUNITIES
         </button>
         <button 
           className={`nav-btn ${activeTab === 'deals' ? 'active' : ''}`}
@@ -121,21 +80,21 @@ const DashboardRouter = () => {
 
       <div className="opportunities-section">
         <div className="opportunities-grid">
-          {displayData.map(item => (
-            <div key={item.id} className="opportunity-card">
+          {opportunities.map(opportunity => (
+            <div key={opportunity.id} className="opportunity-card">
               <div className="card-header">
                 <div className="business-logo">
                   <div className="logo-placeholder"></div>
-                  <span className="business-name">{item.name}</span>
+                  <span className="business-name">{opportunity.name}</span>
                 </div>
               </div>
-              <h3 className="business-title">{item.name}</h3>
-              <div className="business-category">{item.category || item.sport}</div>
-              <div className="business-location">{item.location || item.school}</div>
-              <p className="business-description">{item.description}</p>
+              <h3 className="business-title">{opportunity.name}</h3>
+              <div className="business-category">{opportunity.category}</div>
+              <div className="business-location">{opportunity.location}</div>
+              <p className="business-description">{opportunity.description}</p>
               <div className="card-buttons">
-                <button className="action-btn">{item.buttons[0]}</button>
-                <button className="amount-btn">{item.buttons[1]}</button>
+                <button className="action-btn">{opportunity.buttons[0]}</button>
+                <button className="amount-btn">{opportunity.buttons[1]}</button>
               </div>
             </div>
           ))}
@@ -145,4 +104,4 @@ const DashboardRouter = () => {
   );
 };
 
-export default DashboardRouter;
+export default DemoDashboard;

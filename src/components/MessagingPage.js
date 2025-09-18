@@ -1,184 +1,100 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../auth/AuthProvider';
-import { supabase } from '../lib/supabaseClient';
+﻿import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MessagingPage.css';
 
 const MessagingPage = () => {
-  const { user, profile } = useAuth();
-  const [conversations, setConversations] = useState([]);
+  const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadConversations();
+  const conversations = [
+    {
+      id: 1,
+      name: 'Carolina Sports Bar & Gr',
+      sender: 'Car...',
+      date: 'Jan 15',
+      message: 'Great! Let\'s...',
+      unread: 2
+    },
+    {
+      id: 2,
+      name: 'Elite Fitness Center',
+      sender: 'Elite Fitnes...',
+      date: 'Jan 14',
+      message: 'When can you start...',
+      unread: 0
+    },
+    {
+      id: 3,
+      name: 'Sports Gear Co.',
+      sender: 'Sports Gear Co.',
+      date: 'Jan 13',
+      message: 'We\'d love to send you s...',
+      unread: 0
     }
-  }, [user]);
+  ];
 
-  const loadConversations = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          deals (title),
-          profiles!messages_sender_id_fkey (full_name, role),
-          profiles!messages_recipient_id_fkey (full_name, role)
-        `)
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading conversations:', error);
-        return;
-      }
-
-      // Group messages by conversation
-      const conversationMap = new Map();
-      data.forEach(message => {
-        const otherUserId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
-        const otherUserName = message.sender_id === user.id 
-          ? message.profiles_recipient_id_fkey?.full_name 
-          : message.profiles_sender_id_fkey?.full_name;
-        
-        if (!conversationMap.has(otherUserId)) {
-          conversationMap.set(otherUserId, {
-            id: otherUserId,
-            name: otherUserName || 'Unknown User',
-            lastMessage: message.content,
-            lastMessageTime: message.created_at,
-            dealTitle: message.deals?.title
-          });
-        }
-      });
-
-      setConversations(Array.from(conversationMap.values()));
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleBack = () => {
+    navigate('/dashboard');
   };
 
-  const loadMessages = async (conversationId) => {
-    try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`and(sender_id.eq.${user.id},recipient_id.eq.${conversationId}),and(sender_id.eq.${conversationId},recipient_id.eq.${user.id})`)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error loading messages:', error);
-        return;
-      }
-
-      setMessages(data);
-      setSelectedConversation(conversationId);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    }
+  const handleConversationClick = (conversation) => {
+    setSelectedConversation(conversation);
   };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          recipient_id: selectedConversation,
-          content: newMessage.trim()
-        });
-
-      if (error) {
-        console.error('Error sending message:', error);
-        return;
-      }
-
-      setNewMessage('');
-      loadMessages(selectedConversation);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="messaging-loading">
-        <div className="spinner"></div>
-        <p>Loading conversations...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="messaging-page">
       <div className="messaging-container">
         <div className="conversations-sidebar">
-          <h2>Conversations</h2>
+          <button className="back-btn" onClick={handleBack}>
+             Back
+          </button>
+          <h2>Messages</h2>
+          <p className="messages-subtitle">Connect with businesses about opportunities.</p>
+          
+          <div className="search-bar">
+            <input 
+              type="text" 
+              placeholder="Search businesses..." 
+              className="search-input"
+            />
+          </div>
+
           <div className="conversations-list">
             {conversations.map(conversation => (
               <div
                 key={conversation.id}
-                className={`conversation-item ${selectedConversation === conversation.id ? 'active' : ''}`}
-                onClick={() => loadMessages(conversation.id)}
+                className={`conversation-item ${selectedConversation?.id === conversation.id ? 'active' : ''}`}
+                onClick={() => handleConversationClick(conversation)}
               >
                 <div className="conversation-header">
                   <h4>{conversation.name}</h4>
-                  <span className="conversation-time">
-                    {new Date(conversation.lastMessageTime).toLocaleDateString()}
-                  </span>
+                  <span className="conversation-date">{conversation.date}</span>
                 </div>
-                <p className="conversation-preview">{conversation.lastMessage}</p>
-                {conversation.dealTitle && (
-                  <span className="deal-context">Re: {conversation.dealTitle}</span>
+                <div className="conversation-preview">
+                  <span className="sender">{conversation.sender}</span>
+                  <span className="message-text">{conversation.message}</span>
+                </div>
+                {conversation.unread > 0 && (
+                  <div className="unread-badge">{conversation.unread}</div>
                 )}
               </div>
             ))}
-            {conversations.length === 0 && (
-              <p className="no-conversations">No conversations yet</p>
-            )}
           </div>
         </div>
 
         <div className="messages-area">
           {selectedConversation ? (
-            <>
-              <div className="messages-header">
-                <h3>Messages</h3>
-              </div>
+            <div className="selected-conversation">
+              <h3>{selectedConversation.name}</h3>
               <div className="messages-list">
-                {messages.map(message => (
-                  <div
-                    key={message.id}
-                    className={`message ${message.sender_id === user.id ? 'sent' : 'received'}`}
-                  >
-                    <div className="message-content">{message.content}</div>
-                    <div className="message-time">
-                      {new Date(message.created_at).toLocaleTimeString()}
-                    </div>
-                  </div>
-                ))}
+                <p>Messages will appear here...</p>
               </div>
-              <div className="message-input">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                />
-                <button onClick={sendMessage}>Send</button>
-              </div>
-            </>
+            </div>
           ) : (
             <div className="no-conversation-selected">
-              <p>Select a conversation to start messaging</p>
+              <h2>Messages</h2>
+              <h3>Select a conversation</h3>
+              <p>Choose a business from the list to start messaging.</p>
             </div>
           )}
         </div>
@@ -187,4 +103,4 @@ const MessagingPage = () => {
   );
 };
 
-export default MessagingPage; 
+export default MessagingPage;
